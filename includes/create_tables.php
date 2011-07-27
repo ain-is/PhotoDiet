@@ -538,4 +538,38 @@ function UpgradeTo171($prefix, $newversion)
 	return $create_status;
 }
 
+function UpgradeTo20($prefix, $newversion)
+{
+	global $lang_updated, $lang_create_update_to;
+	
+	$create_status[null] = null;
+	
+	// Users table
+	mysql_query("CREATE TABLE IF NOT EXISTS `{$prefix}users` (
+  					`id` int(11) NOT NULL AUTO_INCREMENT,
+  					`login` varchar(20) NOT NULL DEFAULT '',
+  					`password` varchar(90) NOT NULL DEFAULT '',
+  					`last_login_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  					`enabled` tinyint(1) NOT NULL DEFAULT '1',
+  					PRIMARY KEY (`id`)
+				)")or die("MySQL Error: ". mysql_error());
+	
+	
+	// Insert columns for collage support to 'pixelpost' table
+	mysql_query("ALTER TABLE `{$prefix}pixelpost` ADD `is_collage` tinyint(1) NOT NULL DEFAULT '0', 
+												  ADD 'parent_collage_id` int(11) NOT NULL DEFAULT '0',
+												  ADD `collage_rows_num` int(2) NOT NULL DEFAULT '0',
+												  ADD `collage_cols_num` int(2) NOT NULL DEFAULT '0',
+										 		  ADD `user_id` int(11) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
+	
+	// Insert 'user_id'column to 'comments' table for multiuser mode support
+	mysql_query("ALTER TABLE `{$prefix}comments` ADD `user_id` tinyint(1) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
+	
+	// Update version
+	mysql_query("INSERT INTO `{$prefix}version` (version) VALUES ($newversion)")or die("MySQL Error: ". mysql_error());
+	
+	$create_status[$lang_create_update_to."&nbsp;".$newversion] = $lang_updated;
+	return $create_status;
+}
+
 ?>
