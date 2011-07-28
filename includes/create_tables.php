@@ -560,7 +560,8 @@ function UpgradeTo20($prefix, $newversion)
 												  ADD 'parent_collage_id` int(11) NOT NULL DEFAULT '0',
 												  ADD `collage_rows_num` int(2) NOT NULL DEFAULT '0',
 												  ADD `collage_cols_num` int(2) NOT NULL DEFAULT '0',
-										 		  ADD `user_id` int(11) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
+										 		  ADD `user_id` int(11) NOT NULL DEFAULT '0',
+												  ADD `order_in_collage` int(4) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
 	
 	// Insert 'user_id'column to 'comments' table for multiuser mode support
 	mysql_query("ALTER TABLE `{$prefix}comments` ADD `user_id` tinyint(1) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
