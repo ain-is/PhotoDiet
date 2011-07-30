@@ -7,6 +7,26 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 {
 	$thumb_output = "";
 	$where = "";
+	$user_id = null; // User name from 'users' table
+	$collage_id = 0; 
+	$collage_rows_num = 0;
+	$collage_cols_num = 0;
+	
+	// Get user and collage ID from URL
+	if (isset($_GET['user'])) {
+		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = {$_GET['user']}");
+		$user_id = mysql_fetch_field($query, 0);
+	}
+	if (isset($_GET['collage_id'])) {
+		$collage_id = $_GET['collage_id'];
+		if ($collage_id > 0) {
+			$query = mysql_query("select datetime, headline, body, collage_rows_num, collage_cols_num from {$pixelpost_db_prefix}pixelpost where id = $collage_id");
+			$collage_data = mysql_fetch_array($query);
+			$collage_rows_num = $collage_data[3];
+			$collage_cols_num = $collage_data[4];				
+		}
+	}
+	
 	if ($language_abr == $default_language_abr){
  		$headline_selection = 'headline';
   } else  {
@@ -84,7 +104,11 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	else
 	{
 		$lookingfor = 1;
- 		$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime<='$cdate') ORDER BY ".$cfgrow['display_sort_by']." ".$display_order);
+		if ($collage_id > 0) {
+			$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime<='$cdate' AND !is_collage AND parent_collage_id = {$collage_id}) ORDER BY ".$cfgrow['display_sort_by']." ".$display_order);				
+		} else {
+			$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime<='$cdate' AND !is_collage) ORDER BY ".$cfgrow['display_sort_by']." ".$display_order);
+		}
 	}
 
 	$rows_count = mysql_num_rows($query);
@@ -102,7 +126,7 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 		$local_height = $thumbnail_extra['1'];
 		$thumb_output .= "<a href=\"$showprefix$id\"><img src=\"$thumbnail\" alt=\"$title\" title=\"$title\" width=\"$local_width\" height=\"$local_height\" class=\"thumbnails\" /></a>";
 		$rows_processed++;
-		if ($rows_processed == $rows_count/2) $thumb_output .= "<br/>"; 
+		if ($collage_cols_num > 0 && $collage_cols_num <= $rows_processed && $rows_processed % $collage_cols_num == 0) $thumb_output .= "<br/>"; 
 	}
 
   $tpl = ereg_replace("<THUMBNAILS>",$thumb_output,$tpl);
