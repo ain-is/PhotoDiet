@@ -3,28 +3,36 @@ $addon_name = "MyCollage";
 $addon_description = "Creates photodiet collage.";
 $addon_version = "0.1";
 
+$debug_string = null; // TODO: remove debug code
+
 if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 {
 	$thumb_output = "";
 	$where = "";
-	$user_id = null; // User name from 'users' table
+	$user_id = 0; // User name from 'users' table
 	$collage_id = 0; 
-	$collage_rows_num = 0;
 	$collage_cols_num = 0;
 	
 	// Get user and collage ID from URL
 	if (isset($_GET['user'])) {
-		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = {$_GET['user']}");
-		$user_id = mysql_fetch_field($query, 0);
+		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$_GET['user']}'");
+		$row = mysql_fetch_array($query);
+		$user_id = $row[0];
 	}
-	if (isset($_GET['collage_id'])) {
+	
+	// If collage_id is not set then use recent collage for current user
+	if (!isset($_GET['collage_id'])) {
+		$query = mysql_query("select id from {$pixelpost_db_prefix}pixelpost where user_id = {$user_id} AND is_collage = 1 order by datetime desc limit 1");
+		$row = mysql_fetch_array($query);
+		$collage_id = $row[0];
+	} else {	
 		$collage_id = $_GET['collage_id'];
-		if ($collage_id > 0) {
-			$query = mysql_query("select datetime, headline, body, collage_rows_num, collage_cols_num from {$pixelpost_db_prefix}pixelpost where id = $collage_id");
+	}
+	
+	if ($collage_id > 0) {
+			$query = mysql_query("select datetime, headline, body, collage_cols_num from {$pixelpost_db_prefix}pixelpost where id = $collage_id");
 			$collage_data = mysql_fetch_array($query);
-			$collage_rows_num = $collage_data[3];
-			$collage_cols_num = $collage_data[4];				
-		}
+			$collage_cols_num = $collage_data[3];				
 	}
 	
 	if ($language_abr == $default_language_abr){
@@ -105,10 +113,8 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	{
 		$lookingfor = 1;
 		if ($collage_id > 0) {
-			$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime<='$cdate' AND !is_collage AND parent_collage_id = {$collage_id}) ORDER BY ".$cfgrow['display_sort_by']." ".$display_order);				
-		} else {
-			$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime<='$cdate' AND !is_collage) ORDER BY ".$cfgrow['display_sort_by']." ".$display_order);
-		}
+			$query = mysql_query("SELECT 1,id,{$headline_selection},image,datetime FROM {$pixelpost_db_prefix}pixelpost, {$pixelpost_db_prefix}collage_images WHERE (datetime<='$cdate' AND id = image_id AND collage_id = {$collage_id}) ORDER BY order_in_collage");				
+		} 
 	}
 
 	$rows_count = mysql_num_rows($query);
@@ -179,5 +185,9 @@ while(list($id,$name,$alt_name) = mysql_fetch_row($query))
 
 $checkboxes .= "<input type='submit' value='Filter' /></form>";
 $tpl = ereg_replace("<BROWSE_CHECKBOXLIST>",$checkboxes,$tpl);
+
+if ($debug_string != null) $tpl = ereg_replace("<DEBUG_INFO>","<span class='title'>{$debug_string}</span><hr /><br />",$tpl);
+else $tpl = ereg_replace("<DEBUG_INFO>",null,$tpl); 
+
 
 ?>

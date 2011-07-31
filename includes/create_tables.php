@@ -554,14 +554,23 @@ function UpgradeTo20($prefix, $newversion)
   					PRIMARY KEY (`id`)
 				)")or die("MySQL Error: ". mysql_error());
 	
+
+	// collage_images table to provide multiple-to-multiple connection between collages and images
+	mysql_query("CREATE TABLE `pixelpost_collage_images` (
+					`collage_id` int(11) NOT NULL,
+					`image_id` int(11) NOT NULL,
+					`order_in_collage` int(4) NOT NULL DEFAULT '0',
+					PRIMARY KEY (`collage_id`,`image_id`),
+					KEY `collage_id_fk` (`collage_id`),
+					KEY `image_id_fk` (`image_id`),
+					CONSTRAINT `collage_id_fk` FOREIGN KEY (`collage_id`) REFERENCES `pixelpost_pixelpost` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+					CONSTRAINT `image_id_fk` FOREIGN KEY (`image_id`) REFERENCES `pixelpost_pixelpost` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+				)")or die("MySQL Error: ". mysql_error());
 	
 	// Insert columns for collage support to 'pixelpost' table
 	mysql_query("ALTER TABLE `{$prefix}pixelpost` ADD `is_collage` tinyint(1) NOT NULL DEFAULT '0', 
-												  ADD 'parent_collage_id` int(11) NOT NULL DEFAULT '0',
-												  ADD `collage_rows_num` int(2) NOT NULL DEFAULT '0',
 												  ADD `collage_cols_num` int(2) NOT NULL DEFAULT '0',
-										 		  ADD `user_id` int(11) NOT NULL DEFAULT '0',
-												  ADD `order_in_collage` int(4) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
+										 		  ADD `user_id` int(11) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
 	
 	// Insert 'user_id'column to 'comments' table for multiuser mode support
 	mysql_query("ALTER TABLE `{$prefix}comments` ADD `user_id` tinyint(1) NOT NULL DEFAULT '0' ") or die("MySQL Error: ". mysql_error());
