@@ -12,17 +12,17 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	$user_id = 0; // User name from 'users' table
 	$collage_id = 0; 
 	$collage_cols_num = 0;
-	$collage_datetime = 0;
-	$showprefix =""; // Prefix for links to next and previous collages
+	$collage_datetime = $cdate;
+	$collage_showprefix =""; // Prefix for links to next and previous collages
 	
 	// Get user and collage ID from URL
 	if (isset($_GET['user'])) {
 		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$_GET['user']}'");
 		$row = mysql_fetch_array($query);
 		$user_id = $row[0];
-		$showprefix = "./index.php?x=mycollage&user=".$_GET['user']."&collage_id=";		
+		$collage_showprefix = "./index.php?x=mycollage&user=".$_GET['user']."&collage_id=";		
 	} else {
-		$showprefix = "./index.php?x=mycollage&collage_id=";
+		$collage_showprefix = "./index.php?x=mycollage&collage_id=";
 	}
 	
 	// If collage_id is not set then use recent collage for current user
@@ -142,52 +142,40 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	}
 
   $tpl = ereg_replace("<THUMBNAILS>",$thumb_output,$tpl);
+
+
+	// Build links for previous and next collages
+	// Get previous collage id
+	if(!isset($_SESSION["pixelpost_admin"])) {
+		//public
+		$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime < '$collage_datetime' and datetime<='$cdate' ORDER BY datetime desc limit 0,1");
+		$next_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime > '$collage_datetime' and datetime<='$cdate' ORDER BY datetime limit 0,1");
+	}else{
+		//admin
+		$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime < '$collage_datetime')  ORDER BY datetime desc limit 0,1");
+		$next_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime > '$collage_datetime')  ORDER BY datetime limit 0,1");
+	}
+
+	$collage_previous_id = $previous_row['id'];
+
+	if ($collage_previous_id == null) {
+		$collage_previous_link = "";
+	} else {
+		$collage_previous_link = "<a href='$collage_showprefix$collage_previous_id'>$lang_previous</a>";
+	}
+
+	$collage_next_id = $next_row['id'];
+
+	if ($collage_next_id == null) {
+		$collage_next_link = ""; 
+	}
+	else {
+		$collage_next_link  =  "<a href='$collage_showprefix$collage_next_id'>$lang_next</a>";
+	}
+
+	$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);
+	$tpl = ereg_replace("<COLLAGE_NEXT_LINK>",$collage_next_link,$tpl);
 }
-
-// Build lings for previous and next collages
-// Get previous collage id
-if(!isset($_SESSION["pixelpost_admin"])) {
-	//public
-	$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime < '$collage_datetime' and datetime<='$cdate' ORDER BY datetime desc limit 1");
-	$next_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime > '$collage_datetime' and datetime<='$cdate' ORDER BY datetime limit 1");
-}else{
-	//admin
-	$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime < '$collage_datetime')  ORDER BY datetime desc limit 0,1");
-	$next_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime > '$collage_datetime')  ORDER BY datetime limit 0,1");
-}
-
-$collage_previous_id = $previous_row['id'];
-
-if ($collage_previous_id == null) {
-	$collage_previous_link = "";
-} else {
-	$collage_previous_link = "<a href='$showprefix$collage_previous_id'>$lang_previous</a>";
-}
-
-$collage_next_id = $next_row['id'];
-
-if ($collage_next_id == null) {
-	$collage_next_link = ""; 
-}
-else {
-	$collage_next_link  =  "<a href='$showprefix$collage_next_id'>$lang_next</a>";
-}
-
-$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);
-$tpl = ereg_replace("<COLLAGE_NEXT_LINK>",$collage_next_link,$tpl);
-
-
-if(!isset($_SESSION["pixelpost_admin"])) {
-	//public
-	$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime < '$collage_datetime' and datetime<='$cdate' ORDER BY datetime desc limit 1");
-}else{
-	//admin
-	$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE (datetime < '$collage_datetime')  ORDER BY datetime desc limit 0,1");
-}
-
-$collage_previous_id   =  $previous_row['id'];
-$collage_previous_link     =   "<a href='$showprefix$collage_previous_id'>$lang_previous</a>";
-
 
 // build browse menu
 // $browse_select = "<select name='browse' onchange='self.location.href=this.options[this.selectedIndex].value;'><option value=''>$lang_browse_select_category</option><option value='?x=browse&amp;category='>$lang_browse_all</option>";
