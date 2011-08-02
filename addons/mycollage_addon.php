@@ -35,10 +35,13 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	}
 	
 	if ($collage_id > 0) {
-			$query = mysql_query("select datetime, headline, body, collage_cols_num from {$pixelpost_db_prefix}pixelpost where id = $collage_id");
-			$collage_data = mysql_fetch_array($query);
-			$collage_cols_num = $collage_data[3];	
-			$collage_datetime = $collage_data[0];
+			$row = sql_array("select datetime, headline, body, collage_cols_num from {$pixelpost_db_prefix}pixelpost where id = $collage_id");
+			$collage_cols_num = $row['collage_cols_num'];	
+			$collage_datetime = $row['datetime'];
+	        $collage_datetime_formatted =   strtotime($collage_datetime);
+	        $collage_datetime_formatted =   date($cfgrow['dateformat'],$collage_datetime_formatted);
+			$collage_title = pullout($row['headline']);
+			$collage_notes = ($cfgrow['markdown'] == 'T') ? markdown(pullout($row['body'])) : pullout($row['body']);			
 	}
 	
 	if ($language_abr == $default_language_abr){
@@ -175,6 +178,19 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 
 	$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_NEXT_LINK>",$collage_next_link,$tpl);
+
+	if ($row['comments'] == 'F'){
+	
+		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$_GET['user']."&collage_id=$collage_id' onclick=\"alert('$lang_comment_popup_disabled');\">$lang_comment_popup</a>",$tpl);
+	}else{
+	
+		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$_GET['user']."&collage_id=$collage_id' onclick=\"window.open('index.php?popup=comment&amp;showimage=$collage_id','Comments','width=480,height=540,scrollbars=yes,resizable=yes');\">$lang_comment_popup</a>",$tpl);
+	}
+	
+	$tpl = ereg_replace("<COLLAGE_TITLE>",$collage_title,$tpl);
+	$tpl = ereg_replace("<COLLAGE_DATETIME>",$collage_datetime_formatted,$tpl);
+	$tpl = ereg_replace("<COLLAGE_NOTES>",$collage_notes,$tpl);
+	
 }
 
 // build browse menu
