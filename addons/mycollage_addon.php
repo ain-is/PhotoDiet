@@ -191,6 +191,12 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	$tpl = ereg_replace("<COLLAGE_DATETIME>",$collage_datetime_formatted,$tpl);
 	$tpl = ereg_replace("<COLLAGE_NOTES>",$collage_notes,$tpl);
 	
+	// get number of comments
+	$cnumb_row             =  sql_array("SELECT count(*) as count FROM ".$pixelpost_db_prefix."comments WHERE parent_id='$collage_id' and publish='yes'");
+	$collage_comments_number =  $cnumb_row['count'];
+	
+	if ($collage_comments_number) $tpl = ereg_replace("<COLLAGE_COMMENTS_NUMBER>"," ({$collage_comments_number})",$tpl);
+	
 }
 
 // build browse menu
