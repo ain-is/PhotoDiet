@@ -21,8 +21,10 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 		$row = mysql_fetch_array($query);
 		$user_id = $row[0];
 		$collage_showprefix = "./index.php?x=mycollage&user=".$_GET['user']."&collage_id=";		
+        $tpl = ereg_replace("<USER_NAME>",$_GET['user'],$tpl);
 	} else {
 		$collage_showprefix = "./index.php?x=mycollage&collage_id=";
+        $tpl = ereg_replace("<USER_NAME>","",$tpl);
 	}
 	
 	// If collage_id is not set then use recent collage for current user
