@@ -3,7 +3,9 @@
 // SVN file version:
 // $Id: comments.php 518 2008-01-16 20:17:20Z schonhose $
 
-if(!isset($_SESSION["pixelpost_admin"]) || $cfgrow['password'] != $_SESSION["pixelpost_admin"] || $_GET["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"] || $_POST["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"] || $_COOKIE["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"]) {
+if(!isset($_SESSION["pixelpost_admin"]) || !isset($_SESSION["current_user"]) && $cfgrow['password'] != $_SESSION["pixelpost_admin"] || 
+    isset($_SESSION["current_user"]) && $user_password != $_SESSION["pixelpost_admin"] || $_GET["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"] || $_POST["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"] || $_COOKIE["_SESSION"]["pixelpost_admin"] == $_SESSION["pixelpost_admin"])
+{
 	die ("Try another day!!");
 }
 

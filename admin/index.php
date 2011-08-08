@@ -145,6 +145,9 @@ else
 // forgot password?
 include('pass_recovery.php');
 
+$user_password = null;
+
+
 // autologin data are valid and cookies are set for a week (604800 seconds)
 if(($cfgrow['admin'] == $_COOKIE['pp_user']) AND (sha1($cfgrow['password'].$_SERVER["REMOTE_ADDR"]) === $_COOKIE['pp_password']) AND !isset($_SESSION["pixelpost_admin"]))
 {
@@ -175,15 +178,39 @@ if($_GET['x'] == "login")
 	}
 	else
 	{
-      $loginmessage = "$admin_start_userpw <br />
-        <a href='#' onclick=\"flip('askforpass'); return false;\">$admin_start_pw_forgot</a><br /><br />
-        ";
+		// Admin credentials are not valid. Is user did not use admin login, check other users
+		if (($cfgrow['admin'] != $_POST['user'])) {
+			$query = mysql_query("select password from {$pixelpost_db_prefix}users where enabled = 1 and login = '{$_POST['user']}'");			
+			$row = mysql_fetch_array($query);
+			$user_password = $row['password'];			
+		}
+		
+		if ($cfgrow_password != null && $user_password == $cfgrow_password) {
+			// User login is valid, set session
+			unset($login);
+			$_SESSION["current_user"] = $_POST['user'];
+			$_SESSION["pixelpost_admin"] = $cfgrow_password;
+				
+		    // set autologin cookie
+		    if($_POST['remember'] == 'on')
+		    {
+			    setcookie( "pp_user", clean($_POST['user']), time()+604800);
+			    setcookie( "pp_password", sha1($cfgrow_password.$_SERVER["REMOTE_ADDR"]), time()+604800);
+		    }
+		    header("Location:index.php");
+		} else { // User login was failed
+			$loginmessage = "$admin_start_userpw <br />
+			          <a href='#' onclick=\"flip('askforpass'); return false;\">$admin_start_pw_forgot</a><br /><br />
+			          ";				
+		}
+		
 	}
 } // if (login = yes) end
 
 if($_GET['x'] == "logout")
 {
 	unset($_SESSION["pixelpost_admin"]);
+	unset($_SESSION["current_user"]);
 	setcookie( "pp_user", "", time()-36000);
 	setcookie( "pp_password", "", time()-36000);
 	header("Location:index.php");
@@ -195,7 +222,15 @@ if(!isset($_SESSION["pixelpost_admin"]))
 	$login = "true";
 } else {
 	// cookie exists, check for validity
-	if($cfgrow['password'] != $_SESSION["pixelpost_admin"])	$login = "true";
+	if (!isset($_SESSION["current_user"])) {
+		if($cfgrow['password'] != $_SESSION["pixelpost_admin"]) $login = "true";		
+	} else {
+			$query = mysql_query("select password from {$pixelpost_db_prefix}users where enabled = 1 and login = '{$_SESSION["current_user"]}'");			
+			$row = mysql_fetch_array($query);
+			$user_password = $row['password'];			
+			if($user_password != $_SESSION["pixelpost_admin"]) $login = "true";
+	}
+	
 }
 
 /************************ END OF LOGIN STUFF ************************/
@@ -307,9 +342,12 @@ if($login == "true")
 ?>
 
 <div id="header">
-<a href="index.php"><?php echo $admin_start_admin_1;?></a>&nbsp;<?php echo $admin_start_admin_2;?> <a href="../" title="<?php echo $admin_start_pp_tit;?>"><?php echo $cfgrow['sitetitle']; ?></a>
+<a href="index.php"><?php echo $admin_start_admin_1;?></a>&nbsp;<?php echo $admin_start_admin_2;?> <a href="../" title="<?php echo $admin_start_pp_tit;?>"><?php echo $cfgrow['sitetitle']; ?></a> <span class="name"><?php echo $_SESSION["current_user"]?></span>
 </div>
 
+<?php
+if (!isset($_SESSION["current_user"])) { // Admin page
+?>
 <div id="navigation">
 <a href="<?php echo $PHP_SELF; ?>?"><?php echo $admin_lang_new_image; ?></a>
 <a href="<?php echo $PHP_SELF; ?>?view=images"><?php echo $admin_lang_images ?></a>
@@ -321,6 +359,19 @@ if($login == "true")
 <?php eval_addon_admin_workspace_menu('admin_main_menu'); ?>
 <a href="<?php echo $PHP_SELF; ?>?x=logout"><?php echo $admin_lang_logout ?></a>
 </div>
+<?php
+} else { // User page
+?>
+<div id="navigation">
+<a href="<?php echo $PHP_SELF; ?>?"><?php echo $admin_lang_new_image; ?></a>
+<a href="<?php echo $PHP_SELF; ?>?view=images"><?php echo $admin_lang_images ?></a>
+<a href="<?php echo $PHP_SELF; ?>?view=comments"><?php echo $admin_lang_comments ?></a>
+<?php eval_addon_admin_workspace_menu('admin_main_menu'); ?>
+<a href="<?php echo $PHP_SELF; ?>?x=logout"><?php echo $admin_lang_logout ?></a>
+</div>
+<?php
+}
+?>
 
 <?php
 // new image
