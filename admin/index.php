@@ -318,11 +318,11 @@ if($login == "true")
     <div class="content">
     <form method="post" action="<?php echo $PHP_SELF; ?>?x=login" accept-charset="UTF-8">
     <?php echo $admin_start_username;?> <br />
-    <input type="text" name="user" class="input" /><br /><br />
+    <input type="text" id="login" name="user" class="input" value="Enter username" onclick="document.getElementById('login').value=''" /><br /><br />
     <?php echo $admin_start_pw;?> <br />
-    <input type="password" name="password" class="input" /><br /><br />
+    <input type="password" name="password" class="input" value=""/><br /><br />
     <?php echo $admin_start_remember;?>
-    <input type="checkbox" name="remember" class="input" /><br /><br />
+    <input type="checkbox" name="remember" class="input" checked="checked"/><br /><br />
     <input type="submit" value="Login" /><br /><br />
     <?php echo $loginmessage; ?>
     </form>
