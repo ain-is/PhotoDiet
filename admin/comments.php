@@ -153,7 +153,13 @@ if($_GET['view'] == "comments") {
 // added for showing correct page number for masked comments				
 				// default setting
 				$moderate_where = " and publish='yes' ";
-				$moderate_where2 = " WHERE publish='yes' ";	
+				$moderate_where2 = " WHERE publish='yes' ";
+				if (isset($_SESSION["current_user"]))  {
+					$collage_where = " and parent_id in (select {$pixelpost_db_prefix}pixelpost.id from {$pixelpost_db_prefix}pixelpost, {$pixelpost_db_prefix}users 
+                                      where user_id = {$pixelpost_db_prefix}users.id and login = '{$_SESSION["current_user"]}' and {$pixelpost_db_prefix}pixelpost.is_collage = 1) ";	
+				} 
+				else $collage_where = "";
+				
 				if ($_GET['show']=='masked') {   
 				 	$moderate_where = " and publish='no' ";
 				 	$moderate_where2 = " WHERE publish='no' ";
@@ -168,10 +174,10 @@ if($_GET['view'] == "comments") {
 				eval_addon_admin_workspace_menu('pages_commentbuttons');
 				
 				// count comments!
-				$commentnumb = sql_array("select count(*) as count from ".$pixelpost_db_prefix."comments".$moderate_where2);
+				$commentnumb = sql_array("select count(*) as count from ".$pixelpost_db_prefix."comments".$moderate_where2.$collage_where);
 				$pixelpost_commentnumb = $commentnumb['count'];
 				// get the number of comments in moderation
- 				$commentnumb_moderation = sql_array("select count(*) as count from ".$pixelpost_db_prefix."comments  WHERE publish='no' ");
+ 				$commentnumb_moderation = sql_array("select count(*) as count from ".$pixelpost_db_prefix."comments  WHERE publish='no' ".$collage_where);
 
 				// display submenu
 				echo "<div id='submenu'>";
@@ -245,7 +251,7 @@ if($_GET['view'] == "comments") {
 				echo "<hr/>
 				<ul>";
 
-        $query = "SELECT comments.*, image,headline  FROM ".$pixelpost_db_prefix."comments AS comments, ".$pixelpost_db_prefix."pixelpost AS post WHERE post.id=parent_id ".$moderate_where.$order_by." limit ".$page.",".$_SESSION['numimg_pp'];
+        $query = "SELECT comments.*, image,headline  FROM ".$pixelpost_db_prefix."comments AS comments, ".$pixelpost_db_prefix."pixelpost AS post WHERE post.id=parent_id ".$moderate_where.$collage_where.$order_by." limit ".$page.",".$_SESSION['numimg_pp'];
         $images = mysql_query($query);
 
   while( $row = mysql_fetch_assoc($images)) {
