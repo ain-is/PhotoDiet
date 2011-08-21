@@ -348,24 +348,31 @@ if($_GET['view'] == "images")
 		else if (isset($_GET['selectfmon'])) $selectfmon = $_GET['selectfmon'];
 		if (isset($_POST['findid']) && $_POST['findfid'] != '') $findfid = $_POST['findfid'];
 
+		if (isset($_SESSION["current_user"]))  {
+			$user_images_where = " is_collage != 1 and user_id in (select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}')";
+		}
+		else {
+			$user_images_where = " true ";
+		}
 		// Get number of photos in database depending on filter		
 		if (isset($selectfcat)) {
-			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."catassoc as b WHERE a.id = b.image_id AND b.cat_id = ".$selectfcat;
+			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."catassoc as b WHERE a.id = b.image_id AND b.cat_id = ".$selectfcat." and ".$user_images_where;
 		}
 		else if (isset($selectftag)) {
-			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.tag LIKE '".$selectftag."'";
+			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.tag LIKE '".$selectftag."'"." and ".$user_images_where;
 		}
 		else if (isset($selectfalttag)) {
-			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.alt_tag LIKE '".$selectfalttag."'";
+			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.alt_tag LIKE '".$selectfalttag."'"." and ".$user_images_where;
 		}
 		else if (isset($selectfmon)) {
-			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost WHERE datetime LIKE '".$selectfmon."%'";
+			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost WHERE datetime LIKE '".$selectfmon."%'"." and ".$user_images_where;
 		}
 		else if (isset($findfid)) {
 			$query = "SELECT count(*) FROM ".$pixelpost_db_prefix."pixelpost WHERE id = ".$findfid." limit 0,1";
 		}		
 		else {
-			$query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost";
+			if (isset($_SESSION["current_user"])) $query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost"." where ".$user_images_where;
+			else $query = "select count(*) as count from ".$pixelpost_db_prefix."pixelpost"; 
 		}
 		$photonumb = sql_array($query);
 		if ($photonumb['count']) $pixelpost_photonumb = $photonumb['count'];
@@ -513,25 +520,26 @@ if($_GET['view'] == "images")
 		
 		//cat filter
 		if (isset($selectfcat)) {
-			$query = "SELECT a.id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."catassoc as b WHERE a.id = b.image_id AND b.cat_id = ".$selectfcat." ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			$query = "SELECT a.id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."catassoc as b WHERE a.id = b.image_id AND b.cat_id = ".$selectfcat." and ".$user_images_where." ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
 		}
 		//tag filter
 		else if (isset($selectftag)) {
-			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.tag LIKE '".$selectftag."' ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.tag LIKE '".$selectftag."'"." and ".$user_images_where." ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
 		}
 		//alt tag filter
 		else if (isset($selectfalttag)) {
-			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.alt_tag LIKE '".$selectfalttag."' ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost as a, ".$pixelpost_db_prefix."tags as b WHERE a.id = b.img_id AND b.alt_tag LIKE '".$selectfalttag."'"." and ".$user_images_where." ORDER BY a.datetime DESC limit $page,".$_SESSION['numimg_pp'];
 		}
 		//month filter
 		else if (isset($selectfmon)) {
-			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost WHERE datetime LIKE '".$selectfmon."%' ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost WHERE datetime LIKE '".$selectfmon."%'"." and ".$user_images_where. " ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
 		}
 		else if (isset($findfid)) {
 			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost WHERE id = ".$findfid." limit 0,1";
 		}
 		else {
-			$query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			if (isset($_SESSION["current_user"])) $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost "." where ".$user_images_where." ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
+			else $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
 		}
 		
 		// construct the pagelinks
