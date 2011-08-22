@@ -19,6 +19,19 @@ if($_GET['view'] == "")
    // save new post
 	if($_GET['x'] == "save")
 	{
+		// Get user ID
+		$user_id = 0;
+		if (isset($_SESSION["current_user"])) {
+			$row = sql_array("select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}'");
+			$user_id = $row['id'];			
+		}
+		
+		// Get collage ID
+		$collage_id = 0;
+		if (isset($_GET['collage_id'])) {
+			$collage_id = $_GET['collage_id'];
+		}
+		
 		$headline = clean($_POST['headline']);
 		$body = clean($_POST['body']);
 
@@ -146,8 +159,8 @@ if($_GET['view'] == "")
 
 		if($status == "ok")
 		{
-			$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info)
-			VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db')";
+			$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info,user_id)
+			VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','$user_id')";
 			$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
 
 	    $theid = mysql_insert_id(); //Gets the id of the last added image to use in the next "insert"
