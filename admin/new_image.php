@@ -11,6 +11,15 @@ if(!isset($_SESSION["pixelpost_admin"]) || !isset($_SESSION["current_user"]) && 
 
 //require("../includes/exifer1_5/exif.php");
 
+$log = "LOG: ";
+$collage_id = 0;
+if (isset($_GET['collage_id'])) {
+	$_SESSION['collage_id'] = $_GET['collage_id'];
+	$collage_id = $_GET['collage_id'];
+}
+
+$log = $log."collage_id = ".$collage_id;
+
 // if no page is specified return a new post / image upload thing
 if($_GET['view'] == "")
 {
@@ -25,13 +34,7 @@ if($_GET['view'] == "")
 			$row = sql_array("select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}'");
 			$user_id = $row['id'];			
 		}
-		
-		// Get collage ID
-		$collage_id = 0;
-		if (isset($_GET['collage_id'])) {
-			$collage_id = $_GET['collage_id'];
-		}
-		
+				
 		$headline = clean($_POST['headline']);
 		$body = clean($_POST['body']);
 
@@ -164,7 +167,32 @@ if($_GET['view'] == "")
 			$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
 
 	    $theid = mysql_insert_id(); //Gets the id of the last added image to use in the next "insert"
+	    
+	    $log = $log."image_id = ".$theid;
+		// Get collage ID
+		if (isset($_SESSION['collage_id'])) {
+			// Get order in collage
+	        $log = $log."collage_id2 = ".$_SESSION['collage_id'];//$collage_id;
+			$order_in_collage = 0;
+			if (isset($_GET['order_in_collage'])) {
+				$order_in_collage = $_GET['order_in_collage'];
+			}
+			else { // Get larges order for this collage
+				$row = sql_array("select max(order_in_collage) as max_order from {$pixelpost_db_prefix}collage_images where collage_id ='{$_SESSION['collage_id']}'");
+				if ($row ) $order_in_collage = $row['max_order'] + 1;
+			}
+			
+	        $log = $log."order_in_collage = ".$order_in_collage;
+			// Set link between new image and collage
+			$query = "INSERT INTO {$pixelpost_db_prefix}collage_images (collage_id, image_id, order_in_collage)
+						VALUES('{$_SESSION['collage_id']}', '$theid', '$order_in_collage')";
+	        $log = $log."query = ".$query;
+			$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
+			
+			unset($_SESSION['collage_id']);
+		}
 
+	    
 			if(isset($_POST['category']))
 			{
 				$query_val = array();
@@ -199,6 +227,7 @@ if($_GET['view'] == "")
 	{
 		unset($alt_headline, $alt_tags, $alt_body, $_POST['category'], $_POST['autodate'], $_POST['post_year'], $_POST['post_month'], $_POST['post_day'], $_POST['post_hour'], $_POST['post_minute'], $_POST['allow_comments']);
 	}
+	/* 	<div id="caption"><b><?php echo $log;?></b></div> */ 
 ?>
 
 	<form method="post" action="<?php echo $PHP_SELF;?>?x=save" enctype="multipart/form-data" accept-charset="UTF-8">
