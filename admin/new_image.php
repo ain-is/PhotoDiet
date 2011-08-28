@@ -12,13 +12,16 @@ if(!isset($_SESSION["pixelpost_admin"]) || !isset($_SESSION["current_user"]) && 
 //require("../includes/exifer1_5/exif.php");
 
 $log = "LOG: ";
-$collage_id = 0;
 if (isset($_GET['collage_id'])) {
 	$_SESSION['collage_id'] = $_GET['collage_id'];
-	$collage_id = $_GET['collage_id'];
+	$log = $log." collage_id = ". $_GET['collage_id'];
 }
 
-$log = $log."collage_id = ".$collage_id;
+if (isset($_GET['order_in_collage'])) {
+	$_SESSION['order_in_collage'] = $_GET['order_in_collage'];
+	$log = $log." order_in_collage = ". $_GET['order_in_collage'];
+}
+
 
 // if no page is specified return a new post / image upload thing
 if($_GET['view'] == "")
@@ -172,12 +175,15 @@ if($_GET['view'] == "")
 		// Get collage ID
 		if (isset($_SESSION['collage_id'])) {
 			// Get order in collage
-	        $log = $log."collage_id2 = ".$_SESSION['collage_id'];//$collage_id;
+	        $log = $log."collage_id2 = ".$_SESSION['collage_id'];
 			$order_in_collage = 0;
-			if (isset($_GET['order_in_collage'])) {
-				$order_in_collage = $_GET['order_in_collage'];
+			if (isset($_SESSION['order_in_collage'])) {
+				$order_in_collage = $_SESSION['order_in_collage'];
+				// Remove link between image and collage with same order (if exists)
+				$del_query = "DELETE FROM {$pixelpost_db_prefix}collage_images WHERE collage_id ='{$_SESSION['collage_id']}' and order_in_collage = '{$order_in_collage}'";
+			    $result = mysql_query($del_query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
 			}
-			else { // Get larges order for this collage
+			else { // Get largest order for this collage
 				$row = sql_array("select max(order_in_collage) as max_order from {$pixelpost_db_prefix}collage_images where collage_id ='{$_SESSION['collage_id']}'");
 				if ($row ) $order_in_collage = $row['max_order'] + 1;
 			}
@@ -189,7 +195,6 @@ if($_GET['view'] == "")
 	        $log = $log."query = ".$query;
 			$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
 			
-			unset($_SESSION['collage_id']);
 		}
 
 	    
@@ -225,7 +230,13 @@ if($_GET['view'] == "")
 
 	if(isset($status) && $status == 'ok')
 	{
-		unset($alt_headline, $alt_tags, $alt_body, $_POST['category'], $_POST['autodate'], $_POST['post_year'], $_POST['post_month'], $_POST['post_day'], $_POST['post_hour'], $_POST['post_minute'], $_POST['allow_comments']);
+		$need_redirect = 0;
+		if (isset($_SESSION["current_user"]) && $_SESSION['collage_id']) {
+			$need_redirect = 1;
+			$redirect_str = "Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION["current_user"]}&collage_id={$_SESSION['collage_id']}";
+		}
+		unset($alt_headline, $alt_tags, $alt_body, $_POST['category'], $_POST['autodate'], $_POST['post_year'], $_POST['post_month'], $_POST['post_day'], $_POST['post_hour'], $_POST['post_minute'], $_POST['allow_comments'], $_SESSION['collage_id'], $_SESSION['order_in_collage']);
+		header($redirect_str);
 	}
 	/* 	<div id="caption"><b><?php echo $log;?></b></div> */ 
 ?>
