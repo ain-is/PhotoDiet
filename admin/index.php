@@ -211,7 +211,6 @@ if($_GET['x'] == "logout")
 {
 	unset($_SESSION["pixelpost_admin"]);
 	unset($_SESSION["current_user"]);
-	unset($_SESSION['collage_id']);
 	setcookie( "pp_user", "", time()-36000);
 	setcookie( "pp_password", "", time()-36000);
 	header("Location:index.php");
