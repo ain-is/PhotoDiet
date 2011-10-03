@@ -15,6 +15,13 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	$collage_datetime = $cdate;
 	$collage_showprefix =""; // Prefix for links to next and previous collages
 	
+	$edit_mode = true;
+	
+	if(!isset($_SESSION["current_user"]) || !isset($_GET['user']) || $_SESSION["current_user"] != $_GET['user'] || $_GET["_SESSION"]["current_user"] == $_SESSION["current_user"] || $_POST["_SESSION"]["current_user"] == $_SESSION["current_user"] || $_COOKIE["_SESSION"]["current_user"] == $_SESSION["current_user"])
+	{
+		$edit_mode = false;
+	}	
+	
 	// Get user and collage ID from URL
 	if (isset($_GET['user'])) {
 		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$_GET['user']}'");
@@ -145,13 +152,15 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 		$rows_processed++;
 		if ($collage_cols_num > 0 && $collage_cols_num <= $rows_processed && $rows_processed % $collage_cols_num == 0) $thumb_output .= "<br/>"; 
 	}
+	
+	if ($edit_mode) $thumb_output .= "<br/><a href=\"admin/index.php?collage_id={$collage_id}\">{$lang_new_image}</a>";
 
   $tpl = ereg_replace("<THUMBNAILS>",$thumb_output,$tpl);
 
 
 	// Build links for previous and next collages
 	// Get previous collage id
-	if(!isset($_SESSION["pixelpost_admin"])) {
+	if(!isset($_SESSION["pixelpost_admin"]) || isset($_SESSION["current_user"])) {
 		//public
 		$previous_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime < '$collage_datetime' and datetime<='$cdate' ORDER BY datetime desc limit 0,1");
 		$next_row = sql_array("SELECT id FROM ".$pixelpost_db_prefix."pixelpost WHERE is_collage = 1 and user_id = {$user_id} and datetime > '$collage_datetime' and datetime<='$cdate' ORDER BY datetime limit 0,1");
@@ -178,6 +187,11 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 		$collage_next_link  =  "<a href='$collage_showprefix$collage_next_id'>$lang_next</a>";
 	}
 
+	// Make Login/Logout link
+	if ($edit_mode)	$login_logout_link = "<a href=\"/Pixelpost/admin/index.php?x=logout\" title=\"{$lang_logout}\">$lang_logout</a>";
+	else $login_logout_link = "<a href=\"/Pixelpost/admin/index.php\" title=\"{$lang_login}\">$lang_login</a>";
+	
+	$tpl = ereg_replace("<LOGIN_LOGOUT_LINK>",$login_logout_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_NEXT_LINK>",$collage_next_link,$tpl);
 

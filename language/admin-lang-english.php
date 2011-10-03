@@ -92,6 +92,7 @@ $admin_lang_pw_text_7           				= "This email is sent automatically from the
 $admin_lang_pw_text_8           				= "\n\nand login with that new password to reset this automatically generated password\n\nimmediately!";
 
 // Admin Menu
+$admin_lang_home               					= "Home";
 $admin_lang_new_image          					= "New Image";
 $admin_lang_images             					= "Images";
 $admin_lang_categories         					= "Categories";

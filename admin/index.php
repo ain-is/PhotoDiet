@@ -54,6 +54,7 @@ if(isset($_GET["loginmessage"]) || isset($_POST["loginmessage"]))	$loginmessage 
 
 // variable saying we are inside admin panel (i.e. to use in addons)
 $admin_panel = 1;
+$user_home_page = "/Pixelpost/index.php?x=mycollage&user=";
 
 session_start();
 
@@ -197,7 +198,7 @@ if($_GET['x'] == "login")
 			    setcookie( "pp_user", clean($_POST['user']), time()+604800);
 			    setcookie( "pp_password", sha1($cfgrow_password.$_SERVER["REMOTE_ADDR"]), time()+604800);
 		    }
-		    header("Location:index.php");
+		    header("Location:".$user_home_page.$_SESSION["current_user"]);
 		} else { // User login was failed
 			$loginmessage = "$admin_start_userpw <br />
 			          <a href='#' onclick=\"flip('askforpass'); return false;\">$admin_start_pw_forgot</a><br /><br />
@@ -209,11 +210,14 @@ if($_GET['x'] == "login")
 
 if($_GET['x'] == "logout")
 {
+	$user = null;
+	if (isset($_SESSION["current_user"])) $user = $_SESSION["current_user"];
 	unset($_SESSION["pixelpost_admin"]);
 	unset($_SESSION["current_user"]);
 	setcookie( "pp_user", "", time()-36000);
 	setcookie( "pp_password", "", time()-36000);
-	header("Location:index.php");
+	if ($user != null) header("Location:".$user_home_page.$user);
+	else header("Location:index.php");
 }
 
 if(!isset($_SESSION["pixelpost_admin"]))
@@ -363,7 +367,7 @@ if (!isset($_SESSION["current_user"])) { // Admin page
 } else { // User page
 ?>
 <div id="navigation">
-<a href="<?php echo $PHP_SELF; ?>?"><?php echo $admin_lang_new_image; ?></a>
+<a href="<?php echo $user_home_page.$_SESSION["current_user"]; ?>"><?php echo $admin_lang_home; ?></a>
 <a href="<?php echo $PHP_SELF; ?>?view=images"><?php echo $admin_lang_images ?></a>
 <a href="<?php echo $PHP_SELF; ?>?view=comments"><?php echo $admin_lang_comments ?></a>
 <?php eval_addon_admin_workspace_menu('admin_main_menu'); ?>

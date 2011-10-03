@@ -33,6 +33,11 @@ $_lang_file_translator        = 'The Pixelpost Crew';
 $_lang_file_email             = 'thecrew@pixelpost.org';
 $_lang_file_rev               = '1.7';
 
+// COLLAGES
+$lang_new_image                   = "New Image";
+$lang_login                       = "Login";
+$lang_logout                      = "Logout";
+
 // IMAGE NAVIGATION
 $lang_previous                    = "Previous";
 $lang_next                        = "Next";
