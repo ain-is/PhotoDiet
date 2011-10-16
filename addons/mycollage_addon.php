@@ -153,7 +153,10 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 		if ($collage_cols_num > 0 && $collage_cols_num <= $rows_processed && $rows_processed % $collage_cols_num == 0) $thumb_output .= "<br/>"; 
 	}
 	
-	if ($edit_mode) $thumb_output .= "<br/><a href=\"admin/index.php?collage_id={$collage_id}\">{$lang_new_image}</a>";
+	if ($edit_mode) {
+		$thumb_output .= "<br/><a href=\"admin/index.php?collage_id={$collage_id}\">{$lang_new_image}</a>"; // New image link
+		$thumb_output .= "&nbsp;&nbsp;<a href=\"admin/index.php?view=images&collage_id={$collage_id}\">{$edit_images}</a>"; // Edit images link
+	}
 
   $tpl = ereg_replace("<THUMBNAILS>",$thumb_output,$tpl);
 

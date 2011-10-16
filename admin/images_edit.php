@@ -12,6 +12,9 @@ if(!isset($_SESSION["pixelpost_admin"]) || !isset($_SESSION["current_user"]) && 
 // view=images
 if($_GET['view'] == "images")
 {
+	$collage_reference = "";
+	if (isset($_GET['collage_id'])) $collage_reference = "&collage_id={$_GET['collage_id']}";
+			
 	if($_GET['action'] == "masspublish")
 	{
 		$idz= $_POST['moderate_image_boxes'];
@@ -290,6 +293,9 @@ if($_GET['view'] == "images")
 
 		echo "<div class='jcaption'>$admin_lang_imgedit_update</div>
       <div class='content confirm'>$admin_lang_done $admin_lang_imgedit_updated #".$getid.". ".$file_reupload_str.	"</div><p />";
+		
+		// Go back to collage page for collage edit
+		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
   }
 
 	echo "<div id='caption'><b>$admin_lang_images</b></div>";
@@ -327,6 +333,9 @@ if($_GET['view'] == "images")
 		else	$image_message = "$admin_lang_imgedit_delete_error2<p />";
 		
 		echo $image_message."</div>";
+		
+		// Go back to collage page for collage edit
+		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
 	}
 
   // print out a list over images/posts
@@ -349,7 +358,9 @@ if($_GET['view'] == "images")
 		if (isset($_POST['findid']) && $_POST['findfid'] != '') $findfid = $_POST['findfid'];
 
 		if (isset($_SESSION["current_user"]))  {
-			$user_images_where = " is_collage != 1 and user_id in (select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}')";
+			if (isset($_GET['collage_id']))
+			    $user_images_where = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']} order by order_in_collage)";
+			else  $user_images_where = " is_collage != 1 and user_id in (select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}')";
 		}
 		else {
 			$user_images_where = " true ";
@@ -581,10 +592,10 @@ if($_GET['view'] == "images")
     
 			$fs = filesize($cfgrow['imagepath'].$image);
 			$fs*=0.001;
-    
+
 			echo "<li><a href=\"../index.php?showimage=$id\"><img src=\"".$cfgrow['thumbnailpath']."thumb_$image\" align=\"left\" hspace=\"3\" alt=\"Click to go to image\" /></a>
 				<input type=\"checkbox\" class=\"images-checkbox\" name=\"moderate_image_boxes[]\" value=\"$id\" ".(in_array($id, $_POST['moderate_image_boxes'])?' checked':'')."/>
-				<strong><a href=\"$PHP_SELF?view=images&amp;id=$id\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id\">[$admin_lang_imgedit_delete]</a></strong><br/>
+				<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a></strong><br/>
 				<strong>#$id<br/>
 				$langs $admin_lang_imgedit_title</strong> $headline<br/>";
 				if ($cfgrow['altlangfile'] != 'Off') { 
@@ -683,7 +694,7 @@ if($_GET['view'] == "images")
 			if ($cfgrow['altlangfile'] != 'Off')	$alt_tags = list_tags_edit($_GET['id'], "alt_");
 
 			echo "
-			<form method='post' action='$PHP_SELF?view=images&amp;x=update&amp;imageid=".$getid."&amp;page=".$_SESSION['page_pp']."' enctype='multipart/form-data' accept-charset='UTF-8'>";
+			<form method='post' action='$PHP_SELF?view=images&amp;x=update&amp;imageid=".$getid."&amp;page=".$_SESSION['page_pp'].$collage_reference."' enctype='multipart/form-data' accept-charset='UTF-8'>";
 			echo "
 			<div class='jcaption'>$admin_lang_imgedit_reupimg</div>
 			<div class='content'>

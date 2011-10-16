@@ -35,6 +35,7 @@ $_lang_file_rev               = '1.7';
 
 // COLLAGES
 $lang_new_image                   = "New Image";
+$edit_images                      = "Edit Images";
 $lang_login                       = "Login";
 $lang_logout                      = "Logout";
 
