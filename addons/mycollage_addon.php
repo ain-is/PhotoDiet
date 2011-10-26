@@ -191,8 +191,15 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	}
 
 	// Make Login/Logout link
-	if ($edit_mode)	$login_logout_link = "<a href=\"/Pixelpost/admin/index.php?x=logout\" title=\"{$lang_logout}\">$lang_logout</a>";
-	else $login_logout_link = "<a href=\"/Pixelpost/admin/index.php\" title=\"{$lang_login}\">$lang_login</a>";
+	$login_url = "/Pixelpost/admin/index.php";
+	$logout_url = "/Pixelpost/admin/index.php?x=logout";
+	if (isset($_GET['collage_id'])) {
+		$login_url = $login_url."?collage_id={$_GET['collage_id']}";
+		$logout_url = $logout_url."&collage_id={$_GET['collage_id']}";
+	}
+	
+	if ($edit_mode)	$login_logout_link = "<a href=\"{$logout_url}\" title=\"{$lang_logout}\">$lang_logout</a>";
+	else $login_logout_link = "<a href=\"{$login_url}\" title=\"{$lang_login}\">$lang_login</a>";
 	
 	$tpl = ereg_replace("<LOGIN_LOGOUT_LINK>",$login_logout_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);

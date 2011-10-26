@@ -198,7 +198,11 @@ if($_GET['x'] == "login")
 			    setcookie( "pp_user", clean($_POST['user']), time()+604800);
 			    setcookie( "pp_password", sha1($cfgrow_password.$_SERVER["REMOTE_ADDR"]), time()+604800);
 		    }
-		    header("Location:".$user_home_page.$_SESSION["current_user"]);
+		    $user_home_page = $user_home_page.$_SESSION["current_user"];
+		    if (isset($_POST['collage_id'])){
+		    	$user_home_page = $user_home_page."&collage_id=".$_POST['collage_id'];
+		    }
+		    header("Location:".$user_home_page);
 		} else { // User login was failed
 			$loginmessage = "$admin_start_userpw <br />
 			          <a href='#' onclick=\"flip('askforpass'); return false;\">$admin_start_pw_forgot</a><br /><br />
@@ -216,7 +220,13 @@ if($_GET['x'] == "logout")
 	unset($_SESSION["current_user"]);
 	setcookie( "pp_user", "", time()-36000);
 	setcookie( "pp_password", "", time()-36000);
-	if ($user != null) header("Location:".$user_home_page.$user);
+	if ($user != null) {
+		$user_home_page = $user_home_page.$user;
+		if (isset($_GET['collage_id'])){
+		    $user_home_page = $user_home_page."&collage_id={$_GET['collage_id']}";
+		}
+		header("Location:".$user_home_page);
+	}
 	else header("Location:index.php");
 }
 
@@ -329,6 +339,7 @@ if($login == "true")
     <input type="checkbox" name="remember" class="input" checked="checked"/><br /><br />
     <input type="submit" value="Login" /><br /><br />
     <?php echo $loginmessage; ?>
+    <input type="hidden" name="collage_id" value="<?php echo $_GET['collage_id'];?>">
     </form>
     <div id='askforpass'><script type='text/javascript'>flip('askforpass');</script>
     <hr />
