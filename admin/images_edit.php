@@ -338,6 +338,22 @@ if($_GET['view'] == "images")
 		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
 	}
 
+	// x=delete_from_collage
+	if($_GET['x'] == "delete_from_collage")
+	{
+		//eval_addon_admin_workspace_menu('image_deleted');
+		if (isset($_GET['imageid']) && isset($_GET['collage_id'])) {
+			echo "<div class='jcaption'>$admin_lang_imgedit_deleted	</div>
+						<div class='content confirm'>";
+			$query = "delete from ".$pixelpost_db_prefix."collage_images where image_id='{$_GET['imageid']}' and collage_id='{$_GET['collage_id']}'";
+			$result = mysql_query($query) ||("Error: ".mysql_error());
+		    echo "&nbsp;$admin_lang_imgedit_deleted_from_collage&nbsp;</div>";
+		}
+	
+		// Go back to collage page for collage edit
+		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
+	}
+	
   // print out a list over images/posts
   if($_GET['id'] == "")
   {
@@ -595,7 +611,7 @@ if($_GET['view'] == "images")
 
 			echo "<li><a href=\"../index.php?showimage=$id\"><img src=\"".$cfgrow['thumbnailpath']."thumb_$image\" align=\"left\" hspace=\"3\" alt=\"Click to go to image\" /></a>
 				<input type=\"checkbox\" class=\"images-checkbox\" name=\"moderate_image_boxes[]\" value=\"$id\" ".(in_array($id, $_POST['moderate_image_boxes'])?' checked':'')."/>
-				<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a></strong><br/>
+				<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>
 				<strong>#$id<br/>
 				$langs $admin_lang_imgedit_title</strong> $headline<br/>";
 				if ($cfgrow['altlangfile'] != 'Off') { 

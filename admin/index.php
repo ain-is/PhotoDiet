@@ -295,6 +295,13 @@ if (agree) return true ;
 else return false ;
 }
 
+function confirmDeleteImgFromCollage()
+{
+var agree=confirm("<?php echo $admin_lang_imgedit_js_del_im_from_collage;?>");
+if (agree) return true ;
+else return false ;
+}
+
 function confirmDeleteComment()
 {
 var agree2=confirm("<?php echo $admin_lang_cmnt_js_del_comm;?>");
