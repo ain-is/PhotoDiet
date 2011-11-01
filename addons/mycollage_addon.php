@@ -193,18 +193,26 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	// Make Login/Logout link
 	$login_url = "/Pixelpost/admin/index.php";
 	$logout_url = "/Pixelpost/admin/index.php?x=logout";
+	$new_collage_url = $login_url."?x=collage"; 
 	if (isset($_GET['collage_id'])) {
 		$login_url = $login_url."?collage_id={$_GET['collage_id']}";
 		$logout_url = $logout_url."&collage_id={$_GET['collage_id']}";
 	}
 	
-	if ($edit_mode)	$login_logout_link = "<a href=\"{$logout_url}\" title=\"{$lang_logout}\">$lang_logout</a>";
-	else $login_logout_link = "<a href=\"{$login_url}\" title=\"{$lang_login}\">$lang_login</a>";
+	if ($edit_mode)	{
+		$login_logout_link = "<a href=\"{$logout_url}\" title=\"{$lang_logout}\">$lang_logout</a>";
+		$new_collage_link = "<a href=\"{$new_collage_url}\" title=\"{$add_new_collage}\">$new_collage</a> |";
+	}
+	else {
+		$login_logout_link = "<a href=\"{$login_url}\" title=\"{$lang_login}\">$lang_login</a>";
+		$new_collage_link = "";
+	}
 	
 	$tpl = ereg_replace("<LOGIN_LOGOUT_LINK>",$login_logout_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_PREVIOUS_LINK>",$collage_previous_link,$tpl);
 	$tpl = ereg_replace("<COLLAGE_NEXT_LINK>",$collage_next_link,$tpl);
-
+	$tpl = ereg_replace("<NEW_COLLAGE_LINK>",$new_collage_link,$tpl);
+	
 	if ($row['comments'] == 'F'){
 	
 		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$_GET['user']."&collage_id=$collage_id' onclick=\"alert('$lang_comment_popup_disabled');\">$lang_comment_popup</a>",$tpl);

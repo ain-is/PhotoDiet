@@ -38,6 +38,8 @@ $lang_new_image                   = "New Image";
 $edit_images                      = "Edit Images";
 $lang_login                       = "Login";
 $lang_logout                      = "Logout";
+$new_collage                      = "New Collage";
+$add_new_collage                      = "Add New Collage";
 
 // IMAGE NAVIGATION
 $lang_previous                    = "Previous";

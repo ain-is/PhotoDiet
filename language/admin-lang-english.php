@@ -94,6 +94,7 @@ $admin_lang_pw_text_8           				= "\n\nand login with that new password to r
 // Admin Menu
 $admin_lang_home               					= "Home";
 $admin_lang_new_image          					= "New Image";
+$admin_lang_new_collage        					= "New Collage";
 $admin_lang_images             					= "Images";
 $admin_lang_categories         					= "Categories";
 $admin_lang_comments           					= "Comments";
@@ -104,10 +105,13 @@ $admin_lang_logout             					= "Logout";
 
 // New Image
 $admin_lang_ni_post_a_new_image   				= "Post a New Image";
+$admin_lang_ni_post_a_new_collage 				= "Post a New Collage";
 $admin_lang_ni_image              				= "Image";
 $admin_lang_ni_image_title        				= "Image Title";
+$admin_lang_ni_collage_title      				= "Collage Title";
 $admin_lang_ni_select_cat         				= "Select Categories / Keywords";
 $admin_lang_ni_description        				= "Image description / text";
+$admin_lang_ni_description_collage 				= "Collage description / text";
 $admin_lang_ni_datetime           				= "Date and Time for the entry";
 $admin_lang_ni_post_now           				= "Post now";
 $admin_lang_ni_post_one_day_after 				= "Post one day after the last post";

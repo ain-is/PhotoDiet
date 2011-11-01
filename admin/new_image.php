@@ -19,7 +19,7 @@ if($_GET['view'] == "")
 	$show_image_after_upload = True; // For default behavior this is set to 'True' you can change this to false in your addons in the new image page
 
    // save new post
-	if($_GET['x'] == "save")
+	if($_GET['x'] == "save" || $_GET['x'] == "save_collage")
 	{
 		// Get user ID
 		$user_id = 0;
@@ -86,7 +86,7 @@ if($_GET['view'] == "")
 		$status = "no";
 
 	  // prepare the file
-		if($_FILES['userfile'] != "")
+		if((!isset( $_GET['x']) || $_GET['x'] != "save_collage") && $_FILES['userfile'] != "")
 		{
 			$userfile = strtolower(str_replace(" ", "_", $_FILES['userfile']['name']));
 			$userfile = preg_replace('/[^0-9a-z\-_\.]/', '', $userfile);
@@ -148,16 +148,28 @@ if($_GET['view'] == "")
 	 			// NEW WORKSPACE ADDED
         eval_addon_admin_workspace_menu('image_upload_failed');
 			} // end move
-		} // end prepare of file ($_FILES['userfile'] != "")
+		}  else { // end prepare of file ($_FILES['userfile'] != "")
+			if(isset( $_GET['x']) && $_GET['x'] == "save_collage") {
+				$status = "ok";
+				$filnamn = "empty";
+			}
+		}
 
 	  // insert post in mysql
 		$image = $filnamn;
 
 		if($status == "ok")
 		{
-			$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info,user_id)
-			VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','$user_id')";
-			$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
+			if(isset( $_GET['x']) && $_GET['x'] == "save_collage") {
+				// TODO: Add field to define collages colums number
+				$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info, is_collage, collage_cols_num, user_id)
+											VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','1', '3', '$user_id')";
+				$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
+			} else {
+				$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info,user_id)
+							VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','$user_id')";
+				$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
+			}
 
 	    $theid = mysql_insert_id(); //Gets the id of the last added image to use in the next "insert"
 	    
@@ -200,7 +212,7 @@ if($_GET['view'] == "")
 	    // done
 
 			// workspace: image_uploaded
-			eval_addon_admin_workspace_menu('image_uploaded');
+			if(!isset( $_GET['x']) || $_GET['x'] != "save_collage") eval_addon_admin_workspace_menu('image_uploaded');
 
 			// save tags
 			save_tags_new(clean($_POST['tags']),$theid);
@@ -209,31 +221,52 @@ if($_GET['view'] == "")
 			if($cfgrow['altlangfile'] != 'Off')	save_tags_new(clean($_POST['alt_tags']),$theid,"alt_");
 
 			// workspace: image_uploaded
-			eval_addon_admin_workspace_menu('upload_finished');
+			if(!isset( $_GET['x']) || $_GET['x'] != "save_collage") eval_addon_admin_workspace_menu('upload_finished');
 		} // end status ok
 	} // end save
 
 
 	if(isset($status) && $status == 'ok')
 	{
-		$need_redirect = 0;
-		if (isset($_SESSION["current_user"]) && $_POST['collage_id'] != null) {
-			$need_redirect = 1;
-			$redirect_str = "Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION["current_user"]}&collage_id={$_POST['collage_id']}";
+		if (isset($_SESSION["current_user"])) {
+			if ($_POST['collage_id'] != null) {
+				$redirect_str = "Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION["current_user"]}&collage_id={$_POST['collage_id']}";
+			} else if (isset($_GET['x']) && $_GET['x'] == "save_collage" && isset($theid)) {
+				$redirect_str = "Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION["current_user"]}&collage_id={$theid}";
+			}
 		}
 		unset($alt_headline, $alt_tags, $alt_body, $_POST['category'], $_POST['autodate'], $_POST['post_year'], $_POST['post_month'], $_POST['post_day'], $_POST['post_hour'], $_POST['post_minute'], $_POST['allow_comments'], $_POST['collage_id'], $_POST['order_in_collage']);
 		header($redirect_str);
 		/*<div id="caption"><b><?php echo $log;?></b></div> */  
 	}
+	
+	if(isset( $_GET['x']) && $_GET['x'] == "collage")
+	{
+		$x_action = "?x=save_collage";
+		$new = $admin_lang_new_collage;
+		$post_new = $admin_lang_ni_post_a_new_collage;
+		$title = $admin_lang_ni_collage_title;
+		$description = $admin_lang_ni_description_collage;
+	} else {
+		$x_action = "?x=save";
+		$new = $admin_lang_new_image;
+		$post_new = $admin_lang_ni_post_a_new_image;
+		$title = $admin_lang_ni_image_title;
+		$description = $admin_lang_ni_description;
+	}
 ?>
 
-	<form method="post" action="<?php echo $PHP_SELF;?>?x=save" enctype="multipart/form-data" accept-charset="UTF-8">
-		<div id="caption"><b><?php echo $admin_lang_new_image;?></b></div>
-		<div class="jcaption"><?php echo $admin_lang_ni_post_a_new_image;?></div>
+	<form method="post" action="<?php echo $PHP_SELF.$x_action;?>" enctype="multipart/form-data" accept-charset="UTF-8">
+		<div id="caption"><b><?php echo $new;?></b></div>
+		<div class="jcaption"><?php echo $post_new;?></div>
 		<div class="content">
-		<?php echo $admin_lang_ni_image ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <input name="userfile" type="file" size="76"/><p/>
-	<?php echo $admin_lang_ni_image_title;?>&nbsp;&nbsp;&nbsp;
+	<?php if(!isset( $_GET['x']) || $_GET['x'] != "collage") {
+		 echo $admin_lang_ni_image; 
+		 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		 echo "<input name=\"userfile\" type=\"file\" size=\"76\"/><p/>";
+	}
+	?>
+	<?php echo $title;?>&nbsp;&nbsp;&nbsp;
    <input type="text" name="headline" style="width:550px;" value="<?php if(isset($status) && $status!='ok') echo $_POST['headline'];?>"/><p/>
 	<?php echo $admin_lang_ni_tags;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <input type="text" name="tags" style="width:550px;" value="<?php if(isset($status) && $status!='ok') echo $_POST['tags'];?>"/><br/>
@@ -251,7 +284,7 @@ if($_GET['view'] == "")
  ?>
 </div>
 
-    <div class='jcaption'><?php echo $admin_lang_ni_description;?></div>
+    <div class='jcaption'><?php echo $description;?></div>
     <div class='content'>
     <?php	if($cfgrow['markdown'] == 'T')
 				{
