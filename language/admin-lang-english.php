@@ -106,6 +106,7 @@ $admin_lang_logout             					= "Logout";
 // New Image
 $admin_lang_ni_post_a_new_image   				= "Post a New Image";
 $admin_lang_ni_post_a_new_collage 				= "Post a New Collage";
+$admin_lang_ni_collage_cols_num					= "Columns in collage";
 $admin_lang_ni_image              				= "Image";
 $admin_lang_ni_image_title        				= "Image Title";
 $admin_lang_ni_collage_title      				= "Collage Title";

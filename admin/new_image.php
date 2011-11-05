@@ -29,6 +29,8 @@ if($_GET['view'] == "")
 		}
 				
 		$headline = clean($_POST['headline']);
+		if (isset($_POST['collage_cols_num'])) $collage_cols_num = $_POST['collage_cols_num'];
+		else  $collage_cols_num = 0;
 		$body = clean($_POST['body']);
 
 		if(isset($_POST['alt_headline']))
@@ -163,7 +165,7 @@ if($_GET['view'] == "")
 			if(isset( $_GET['x']) && $_GET['x'] == "save_collage") {
 				// TODO: Add field to define collages colums number
 				$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info, is_collage, collage_cols_num, user_id)
-											VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','1', '3', '$user_id')";
+											VALUES('$datetime','$headline','$body','$image','$alt_headline','$alt_body','$comments_settings','$exif_info_db','1', '$collage_cols_num', '$user_id')";
 				$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
 			} else {
 				$query = "INSERT INTO ".$pixelpost_db_prefix."pixelpost (datetime,headline,body,image,alt_headline,alt_body,comments,exif_info,user_id)
@@ -268,10 +270,21 @@ if($_GET['view'] == "")
 	?>
 	<?php echo $title;?>&nbsp;&nbsp;&nbsp;
    <input type="text" name="headline" style="width:550px;" value="<?php if(isset($status) && $status!='ok') echo $_POST['headline'];?>"/><p/>
-	<?php echo $admin_lang_ni_tags;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <?php echo $admin_lang_ni_tags;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <input type="text" name="tags" style="width:550px;" value="<?php if(isset($status) && $status!='ok') echo $_POST['tags'];?>"/><br/>
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $admin_lang_ni_tags_desc;?><p/>
-  <?php	eval_addon_admin_workspace_menu('new_image_form_def_lang'); 	?>
+	<?php if(isset( $_GET['x']) && $_GET['x'] == "collage") {
+		 echo $admin_lang_ni_collage_cols_num; 
+		 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		 echo "<select name=\"collage_cols_num\">";
+		 for ($i = 1; $i <=10; $i++) {
+		 	if ($i == 3) echo "<option selected value=\"$i\">$i</option>";
+		 	else echo "<option value=\"$i\">$i</option>";
+		 }
+		echo "</select><p/>";
+	}
+	?>
+   <?php	eval_addon_admin_workspace_menu('new_image_form_def_lang'); 	?>
   <?php echo $admin_lang_ni_select_cat;?>
 	<?php
 	category_list_as_table(clean($_POST['category']), $cfgrow);
