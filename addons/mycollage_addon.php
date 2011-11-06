@@ -156,6 +156,7 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	if ($edit_mode) {
 		$thumb_output .= "<br/><a href=\"admin/index.php?collage_id={$collage_id}\">{$lang_new_image}</a>"; // New image link
 		$thumb_output .= "&nbsp;&nbsp;<a href=\"admin/index.php?view=images&collage_id={$collage_id}\">{$edit_images}</a>"; // Edit images link
+		$thumb_output .= "&nbsp;&nbsp;<a href=\"admin/index.php?view=images&id={$collage_id}collage_id={$collage_id}\">{$edit_collage}</a>"; // Edit collage
 	}
 
   $tpl = ereg_replace("<THUMBNAILS>",$thumb_output,$tpl);

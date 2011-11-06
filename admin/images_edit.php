@@ -213,6 +213,12 @@ if($_GET['view'] == "images")
   if($_GET['x'] == "update")
   {
 		$headline = clean($_POST['headline']);
+		$is_collage = false;
+		$collage_cols_num = 0;
+		if (isset($_POST['collage_cols_num'])){ // This means, that we are editing collage
+			$is_collage = true;
+			$collage_cols_num = $_POST['collage_cols_num'];
+		}
 		$body = clean($_POST['body']);
 		$alt_headline = clean($_POST['alt_headline']);
 		$alt_body = clean($_POST['alt_body']);
@@ -287,7 +293,7 @@ if($_GET['view'] == "images")
 			$result = mysql_query($query_st) || die("Error: ".mysql_error());
 		}
 
-		$query = "update ".$pixelpost_db_prefix."pixelpost set datetime='$newdatetime', headline='$headline', body='$body', category='$category', alt_headline='$alt_headline', alt_body='$alt_body', comments='$comments_settings' where id='$getid'";
+		$query = "update ".$pixelpost_db_prefix."pixelpost set datetime='$newdatetime', headline='$headline', body='$body', category='$category', alt_headline='$alt_headline', alt_body='$alt_body', comments='$comments_settings', collage_cols_num='$collage_cols_num' where id='$getid'";
 		$result = mysql_query($query) ||("Error: ".mysql_error().$admin_lang_imgedit_db_error);
 
 
@@ -295,7 +301,8 @@ if($_GET['view'] == "images")
       <div class='content confirm'>$admin_lang_done $admin_lang_imgedit_updated #".$getid.". ".$file_reupload_str.	"</div><p />";
 		
 		// Go back to collage page for collage edit
-		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
+			if ($is_collage) header("Location: /Pixelpost/index.php?x=mycollage&user=ksekap&collage_id={$getid}");
+			else if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
   }
 
 	echo "<div id='caption'><b>$admin_lang_images</b></div>";
@@ -378,7 +385,7 @@ if($_GET['view'] == "images")
 			if (isset($_GET['collage_id'])) {
 				$user_images_where_for_count = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']} order by order_in_collage)";
 				$user_images_where = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) and id = image_id order by order_in_collage";
-				$collage_images_subtable = ", (select image_id, order_in_collage from pixelpost_collage_images where collage_id = {$_GET['collage_id']}) as collage_images";
+				$collage_images_subtable = ", (select image_id, order_in_collage from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) as collage_images";
 			}
 			else  {
 				$user_images_where = " is_collage != 1 and user_id in (select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}')";
@@ -681,6 +688,8 @@ if($_GET['view'] == "images")
     // an id is specified, edit the image, pull it out and put it in a form
     $getid = intval($_GET['id']);
     $imagerow = sql_array("SELECT * FROM ".$pixelpost_db_prefix."pixelpost where id='$getid'");
+    $is_collage = $imagerow['is_collage'];
+    $collage_cols_num = $imagerow['collage_cols_num'];;
     $headline = pullout($imagerow['headline']);
     $headline = htmlspecialchars($headline,ENT_QUOTES);
     $body = pullout($imagerow['body']);
@@ -699,18 +708,21 @@ if($_GET['view'] == "images")
     {
       $category[] = $cat_id;
     }
-    echo "
-		<div id='submenu'>
-		<a href='?view=images&amp;id=$getid&amp;imagessview=edit' ";
 
-		if (!isset($_GET["imagesview"])) $selecteclass = 'selectedsubmenu';
+		if (!$is_collage) {
+    		echo "
+			<div id='submenu'>
+			<a href='?view=images&amp;id=$getid&amp;imagessview=edit' ";
 
-		echo "class='".$selectedclass."'>$admin_lang_imgedit_edit_post</a>";
-        	echo_addon_admin_menus($addon_admin_functions,"images","&amp;id=".$getid);
-
-		echo "</div>";
-
-		eval_addon_admin_workspace_menu("image_edit","images");
+			if (!isset($_GET["imagesview"])) $selecteclass = 'selectedsubmenu';
+			
+			echo "class='".$selectedclass."'>$admin_lang_imgedit_edit_post</a>";
+			echo_addon_admin_menus($addon_admin_functions,"images","&amp;id=".$getid);
+			
+			echo "</div>";
+			
+			eval_addon_admin_workspace_menu("image_edit","images");
+		}
 
 // edit image, list categories etc.
 
@@ -722,12 +734,15 @@ if($_GET['view'] == "images")
 
 			echo "
 			<form method='post' action='$PHP_SELF?view=images&amp;x=update&amp;imageid=".$getid."&amp;page=".$_SESSION['page_pp'].$collage_reference."' enctype='multipart/form-data' accept-charset='UTF-8'>";
+			if (!$is_collage) {
+				echo "
+							<div class='jcaption'>$admin_lang_imgedit_reupimg</div>
+							<div class='content'>
+								<input name='userfile' type='file' size='60'/>
+				        		<input name='oldfilename' type = 'hidden' value='$image' />
+							</div>";
+							}
 			echo "
-			<div class='jcaption'>$admin_lang_imgedit_reupimg</div>
-			<div class='content'>
-				<input name='userfile' type='file' size='60'/>
-        		<input name='oldfilename' type = 'hidden' value='$image' />
-			</div>
 			<div class='jcaption'>$admin_lang_imgedit_title</div>
 			<div class='content'>
 				<input type='text' name='headline' value='$headline' style='width:300px;' />
@@ -735,8 +750,18 @@ if($_GET['view'] == "images")
 			<div class='jcaption'>$admin_lang_imgedit_tags_edit</div>
 			<div class='content'><input type='text' name='tags' style='width:550px;' value='$tags' />";
 			eval_addon_admin_workspace_menu('edit_image_form_def_lang');
-			echo "</div>
-			<div class='jcaption'>$admin_lang_imgedit_txt_desc</div>
+			echo "</div>";
+			if ($is_collage) {
+				echo "<div class='jcaption'>$admin_lang_ni_collage_cols_num</div>";
+				echo "<div class='content'><select name=\"collage_cols_num\">";
+				for ($i = 1; $i <=10; $i++) {
+					if ($i == $collage_cols_num) echo "<option selected value=\"$i\">$i</option>";
+					else echo "<option value=\"$i\">$i</option>";
+				}
+				echo "</select><p/>";
+				echo "</div>";
+			}
+			echo "<div class='jcaption'>$admin_lang_imgedit_txt_desc</div>
 			<div class='content'>";
 
 			if($cfgrow['markdown'] == 'T')
@@ -821,15 +846,17 @@ if($_GET['view'] == "images")
 
 				
 			}
-			eval_addon_admin_workspace_menu("image_edit_form","images");
-			echo "
-			<div class='jcaption'>$admin_lang_imgedit_img</div>
-			<div class='content'>
-	    	<b>$admin_lang_imgedit_file_name</b> $image, <b>$admin_lang_imgedit_fsize</b> $img_width x $img_height; $img_size <b>kb</b>
-				<br/>
-         <img id='itemimg' src='".$cfgrow['thumbnailpath']."thumb_$image' alt='' />
-			</div>
-      <div class='content'>
+			if (!$is_collage) {
+				eval_addon_admin_workspace_menu("image_edit_form","images");
+				echo "
+							<div class='jcaption'>$admin_lang_imgedit_img</div>
+							<div class='content'>
+					    	<b>$admin_lang_imgedit_file_name</b> $image, <b>$admin_lang_imgedit_fsize</b> $img_width x $img_height; $img_size <b>kb</b>
+								<br/>
+				         <img id='itemimg' src='".$cfgrow['thumbnailpath']."thumb_$image' alt='' />
+							</div>";
+			}
+      		echo "<div class='content'>
 	    	<input type='submit' value='$admin_lang_imgedit_u_post_button' />
 			</div>
       	    </form>
@@ -863,7 +890,7 @@ if($_GET['view'] == "images")
 				echo $for_echo;
 				//--------------------------------------------------------
 			}
-			else	echo "$admin_lang_imgedit_12crop_opt<p />";
+			else if (!$is_collage)	echo "$admin_lang_imgedit_12crop_opt<p />";
 			echo "<!-- end of content div -->
          <p />";
 		}
