@@ -301,7 +301,7 @@ if($_GET['view'] == "images")
       <div class='content confirm'>$admin_lang_done $admin_lang_imgedit_updated #".$getid.". ".$file_reupload_str.	"</div><p />";
 		
 		// Go back to collage page for collage edit
-			if ($is_collage) header("Location: /Pixelpost/index.php?x=mycollage&user=ksekap&collage_id={$getid}");
+			if ($is_collage) header("Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION['current_user']}&collage_id={$getid}");
 			else if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
   }
 
@@ -361,6 +361,18 @@ if($_GET['view'] == "images")
 		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
 	}
 	
+	//x=select_image
+	if ($_GET['x'] == "select_image")
+	{
+		if (isset($_GET['imageid']) && isset($_GET['old_image_id']) && isset($_GET['collage_id'])) {
+			$query = "update ".$pixelpost_db_prefix."collage_images set image_id='{$_GET['imageid']}' where collage_id='{$_GET['collage_id']}' and image_id='{$_GET['old_image_id']}'";
+			$result = mysql_query($query) ||("Error: ".mysql_error());
+		}
+	
+		// Go back to collage page for collage edit
+		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&id={$_GET['imageid']}&collage_id={$_GET['collage_id']}");
+	}
+	
   // print out a list over images/posts
   if($_GET['id'] == "")
   {
@@ -381,8 +393,16 @@ if($_GET['view'] == "images")
 		if (isset($_POST['findid']) && $_POST['findfid'] != '') $findfid = $_POST['findfid'];
 
 		$collage_images_subtable = "";
+		$page_link_specifier = "";
 		if (isset($_SESSION["current_user"]))  {
+			
 			if (isset($_GET['collage_id'])) {
+				if (isset($_GET['x']) && $_GET['x'] == "select_other_image") 
+					$page_link_specifier = "&amp;x=select_other_image&amp;old_image_id={$_GET['old_image_id']}&amp;collage_id={$_GET['collage_id']}";
+				else $page_link_specifier = "&amp;collage_id={$_GET['collage_id']}";
+			}
+			
+			if (isset($_GET['collage_id']) && (!isset($_GET['x']) || $_GET['x'] != "select_other_image")) {
 				$user_images_where_for_count = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']} order by order_in_collage)";
 				$user_images_where = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) and id = image_id order by order_in_collage";
 				$collage_images_subtable = ", (select image_id, order_in_collage from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) as collage_images";
@@ -521,10 +541,17 @@ if($_GET['view'] == "images")
 			$getfstring = '';
 		}
 	
+		if (isset($_GET['collage_id'])) {
+			echo "
+				<div class='content'>
+				<strong><a href='/Pixelpost/index.php?x=mycollage&user={$_SESSION['current_user']}&collage_id={$_GET['collage_id']}'> $admin_lang_imgedit_back_to_collage</a></strong>
+				</div>";
+		}
+		
 		echo "<div class=\"jcaption\"><strong><span id=\"photonumb\">$pixelpost_photonumb</span>$admin_lang_imgedit_title2".$_SESSION['numimg_pp']."$admin_lang_imgedit_title3$currntpg$admin_lang_imgedit_title4$num_img_pages</strong>
 		</div>
 		<div class=\"content\">
-		<form method=\"post\" name=\"manageposts\" id=\"manageposts\"  accept-charset=\"UTF-8\" action=\"index.php?view=images&amp;page=$page$getfstring\">
+		<form method=\"post\" name=\"manageposts\" id=\"manageposts\"  accept-charset=\"UTF-8\" action=\"index.php?view=images&amp;page=$page$getfstring{$page_link_specifier}\">
 			<input class=\"cmnt-buttons\" type=\"button\" onclick=\"checkAll(document.getElementById('manageposts')); return false; \" value=\"$admin_lang_cmnt_check_all\" name=\"chechallbox\" />
 			<input class=\"cmnt-buttons\" type=\"button\" onclick=\"invertselection(document.getElementById('manageposts')); return false; \" value=\"$admin_lang_cmnt_invert_checks\" name=\"invcheckbox\" />
 			<input class=\"cmnt-buttons\" type=\"submit\" name=\"submitdelete\" value=\"$admin_lang_cmnt_del_selected\" onclick=\"return (confirm('Delete all selected images? \\n  \'Cancel\' to stop, \'OK\' to delete.')) ? document.getElementById('manageposts').action='$PHP_SELF?view=images&amp;action=massdelete' : false;\"/>
@@ -581,7 +608,7 @@ if($_GET['view'] == "images")
 		}
 		else {
 			if (isset($_SESSION["current_user"])) {
-				if (isset($_GET['collage_id'])) $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost".$collage_images_subtable." where ".$user_images_where;
+				if (isset($_GET['collage_id']) && (!isset($_GET['x']) || $_GET['x'] != "select_other_image")) $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost".$collage_images_subtable." where ".$user_images_where." limit $page,".$_SESSION['numimg_pp'];
 				else $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost where ".$user_images_where_for_count." ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
 			}
 			else $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
@@ -597,18 +624,18 @@ if($_GET['view'] == "images")
 		  	{
 				$pcntr++;
 				$page_num = ($page == $pagecounter) ? "<strong>$pcntr</strong>" : $pcntr;
-				$image_page_Links .= "<a href='index.php?view=images&amp;page=$pagecounter$getfstring'>$page_num</a> ";
+				$image_page_Links .= "<a href='index.php?view=images&amp;page=$pagecounter$getfstring{$page_link_specifier}'>$page_num</a> ";
 				$pagecounter=$pagecounter+$_SESSION['numimg_pp'];
 			}// end while
 			if ($page < (($num_img_pages-1)*$_SESSION['numimg_pp']))
       		{
 	      		$newpage = $page+$_SESSION['numimg_pp'];
-	      		$image_page_Links .= "<a href='index.php?view=images&amp;page=$newpage$getfstring'>$admin_lang_next</a>";
+	      		$image_page_Links .= "<a href='index.php?view=images&amp;page=$newpage$getfstring{$page_link_specifier}'>$admin_lang_next</a>";
       		}
 			if ($page >= $_SESSION['numimg_pp'])
       		{
         		$newpage = $page - $_SESSION['numimg_pp'];
-        		$image_page_Links  = "<a href='index.php?view=images&amp;page=$newpage$getfstring'>$admin_lang_prev</a> " .$image_page_Links;
+        		$image_page_Links  = "<a href='index.php?view=images&amp;page=$newpage$getfstring{$page_link_specifier}'>$admin_lang_prev</a> " .$image_page_Links;
       		}
       		echo $image_page_Links."<hr />";
       	}
@@ -626,10 +653,13 @@ if($_GET['view'] == "images")
     
 			$fs = filesize($cfgrow['imagepath'].$image);
 			$fs*=0.001;
-
+			$actions_links = "<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>";
+			if (isset($_GET['x']) && $_GET['x'] == "select_other_image") 
+				$actions_links = "<strong> <a href=\"$PHP_SELF?view=images&amp;x=select_image&amp;old_image_id={$_GET['old_image_id']}&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_select_this_image]</a></strong><br/>";
+				
 			echo "<li><a href=\"../index.php?showimage=$id\"><img src=\"".$cfgrow['thumbnailpath']."thumb_$image\" align=\"left\" hspace=\"3\" alt=\"Click to go to image\" /></a>
 				<input type=\"checkbox\" class=\"images-checkbox\" name=\"moderate_image_boxes[]\" value=\"$id\" ".(in_array($id, $_POST['moderate_image_boxes'])?' checked':'')."/>
-				<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>
+				$actions_links
 				<strong>#$id<br/>
 				$langs $admin_lang_imgedit_title</strong> $headline<br/>";
 				if ($cfgrow['altlangfile'] != 'Off') { 
@@ -676,7 +706,7 @@ if($_GET['view'] == "images")
 
 
     echo '<br/>
-       <form method="post" action="'.$PHP_SELF .'?view=images&amp;page='.$_GET['page'].$getfstring.'" accept-charset="UTF-8">';
+       <form method="post" action="'.$PHP_SELF .'?view=images&amp;page='.$_GET['page'].$getfstring.$page_link_specifier.'" accept-charset="UTF-8">';
  		echo $admin_lang_show.' ';
     echo '<input type="text" name="numimg_pp" size="2" value="'.$_SESSION['numimg_pp'].'" /> '.$admin_lang_imgedit_img_page.'.
 	    <input type="submit" value="'.$admin_lang_go.'" />
@@ -741,7 +771,11 @@ if($_GET['view'] == "images")
 								<input name='userfile' type='file' size='60'/>
 				        		<input name='oldfilename' type = 'hidden' value='$image' />
 							</div>";
-							}
+				echo "
+							<div class='content'>
+							<strong><a href='?view=images&amp;x=select_other_image&amp;old_image_id=$getid&amp;collage_id={$_GET['collage_id']}'> $admin_lang_imgedit_select_other</a></strong>
+							</div>";
+			}
 			echo "
 			<div class='jcaption'>$admin_lang_imgedit_title</div>
 			<div class='content'>

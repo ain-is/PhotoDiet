@@ -150,6 +150,8 @@ $admin_lang_imgedit_tbpublished    				= "To be published:";
 $admin_lang_imgedit_category_plural 			= "Categories:";
 $admin_lang_imgedit_delete          			= "Delete";
 $admin_lang_imgedit_delete_from_collage        	= "Delete from collage";
+$admin_lang_imgedit_select_this_image        	= "Select this image";
+$admin_lang_imgedit_back_to_collage        		= "Back to collage";
 $admin_lang_imgedit_deleted_from_collage        = "Image was deleted from collage, but still available in database.";
 $admin_lang_imgedit_delete1         			= "Deleted";
 $admin_lang_imgedit_delete2         			= "selected image(s).";
@@ -162,6 +164,7 @@ $admin_lang_imgedit_deleted3        			= "Thumbnail deleted.";
 $admin_lang_imgedit_delete_error2   			= "Could not delete thumbnail.\n
                                        			You have to do that some other way, with your ftp software perhaps.";
 $admin_lang_imgedit_reupimg         			= "Re-Upload Image:";
+$admin_lang_imgedit_select_other				= "Select other image from database";
 $admin_lang_imgedit_file            			= "File: ";
 $admin_lang_imgedit_file_isuploaded 			= "is re-uploaded!";
 $admin_lang_imgedit_update          			= "Image update";
