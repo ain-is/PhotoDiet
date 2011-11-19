@@ -560,7 +560,7 @@ function UpgradeTo20($prefix, $newversion)
 					`collage_id` int(11) NOT NULL,
 					`image_id` int(11) NOT NULL,
 					`order_in_collage` int(4) NOT NULL DEFAULT '0',
-					PRIMARY KEY (`collage_id`,`image_id`),
+					PRIMARY KEY (`collage_id`,`image_id`,`order_in_collage`),
 					KEY `collage_id_fk` (`collage_id`),
 					KEY `image_id_fk` (`image_id`),
 					CONSTRAINT `collage_id_fk` FOREIGN KEY (`collage_id`) REFERENCES `pixelpost_pixelpost` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
