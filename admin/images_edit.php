@@ -373,7 +373,24 @@ if($_GET['view'] == "images")
 		if (isset($_GET['collage_id'])) header("Location: index.php?view=images&collage_id={$_GET['collage_id']}");
 	}
 	
-  // print out a list over images/posts
+	//x=select_new_image
+	if ($_GET['x'] == "set_new_image")
+	{
+		$order_in_collage = 1;
+		// Get largest order for this collage
+		$row = sql_array("select max(order_in_collage) as max_order from {$pixelpost_db_prefix}collage_images where collage_id ='{$_GET['collage_id']}'");
+		if ($row ) $order_in_collage = $row['max_order'] + 1;
+				
+		// Set link between new image and collage
+		$query = "INSERT INTO {$pixelpost_db_prefix}collage_images (collage_id, image_id, order_in_collage)
+					VALUES('{$_GET['collage_id']}', '{$_GET['imageid']}', '$order_in_collage')";
+		$result = mysql_query($query) || die("Error: ".mysql_error().$admin_lang_ni_db_error);
+		
+		// Go back to collage page for collage edit
+		if (isset($_GET['collage_id'])) header("Location: /Pixelpost/index.php?x=mycollage&user={$_SESSION['current_user']}&collage_id={$_GET['collage_id']}");
+	}
+	
+	// print out a list over images/posts
   if($_GET['id'] == "")
   {
 		// resetting filter entries
@@ -400,10 +417,12 @@ if($_GET['view'] == "images")
 			if (isset($_GET['collage_id'])) {
 				if (isset($_GET['x']) && $_GET['x'] == "select_other_image") 
 					$page_link_specifier = "&amp;x=select_other_image&amp;old_image_id={$_GET['old_image_id']}&amp;collage_id={$_GET['collage_id']}&amp;order_in_collage={$_GET['order_in_collage']}";
+				else if (isset($_GET['x']) && $_GET['x'] == "select_new_image") 
+					$page_link_specifier = "&amp;x=select_new_image&amp;collage_id={$_GET['collage_id']}";
 				else $page_link_specifier = "&amp;collage_id={$_GET['collage_id']}";
 			}
 			
-			if (isset($_GET['collage_id']) && (!isset($_GET['x']) || $_GET['x'] != "select_other_image")) {
+			if (isset($_GET['collage_id']) && (!isset($_GET['x']) || ($_GET['x'] != "select_other_image") && $_GET['x'] != "select_new_image")) {
 				$user_images_where_for_count = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']} order by order_in_collage)";
 				$user_images_where = " id in (select image_id from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) and id = image_id order by order_in_collage";
 				$collage_images_subtable = ", (select image_id, order_in_collage from {$pixelpost_db_prefix}collage_images where collage_id = {$_GET['collage_id']}) as collage_images";
@@ -555,7 +574,7 @@ if($_GET['view'] == "images")
 		
 		echo "<div class=\"content\">";
 		
-		if (!isset($_GET['x']) || $_GET['x'] != "select_other_image") {
+		if (!isset($_GET['x']) || ($_GET['x'] != "select_other_image") && $_GET['x'] != "select_new_image") {
 					echo " <form method=\"post\" name=\"manageposts\" id=\"manageposts\"  accept-charset=\"UTF-8\" action=\"index.php?view=images&amp;page=$page$getfstring{$page_link_specifier}\">
 						<input class=\"cmnt-buttons\" type=\"button\" onclick=\"checkAll(document.getElementById('manageposts')); return false; \" value=\"$admin_lang_cmnt_check_all\" name=\"chechallbox\" />
 						<input class=\"cmnt-buttons\" type=\"button\" onclick=\"invertselection(document.getElementById('manageposts')); return false; \" value=\"$admin_lang_cmnt_invert_checks\" name=\"invcheckbox\" />
@@ -615,7 +634,7 @@ if($_GET['view'] == "images")
 		}
 		else {
 			if (isset($_SESSION["current_user"])) {
-				if (isset($_GET['collage_id']) && (!isset($_GET['x']) || $_GET['x'] != "select_other_image")) $query = "SELECT id, datetime, headline, body, image, category, alt_headline".$get_order_in_collage." FROM ".$pixelpost_db_prefix."pixelpost".$collage_images_subtable." where ".$user_images_where." limit $page,".$_SESSION['numimg_pp'];
+				if (isset($_GET['collage_id']) && (!isset($_GET['x']) || ($_GET['x'] != "select_other_image") && $_GET['x'] != "select_new_image")) $query = "SELECT id, datetime, headline, body, image, category, alt_headline".$get_order_in_collage." FROM ".$pixelpost_db_prefix."pixelpost".$collage_images_subtable." where ".$user_images_where." limit $page,".$_SESSION['numimg_pp'];
 				else $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost where ".$user_images_where_for_count." ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
 			}
 			else $query = "SELECT id, datetime, headline, body, image, category, alt_headline FROM ".$pixelpost_db_prefix."pixelpost ORDER BY datetime DESC limit $page,".$_SESSION['numimg_pp'];
@@ -661,12 +680,16 @@ if($_GET['view'] == "images")
 			$fs = filesize($cfgrow['imagepath'].$image);
 			$fs*=0.001;
 			$actions_links = "<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}&amp;order_in_collage={$order_in_collage}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>";
-			if (isset($_GET['x']) && $_GET['x'] == "select_other_image") 
-				$actions_links = "<strong> <a href=\"$PHP_SELF?view=images&amp;x=select_image&amp;old_image_id={$_GET['old_image_id']}&amp;imageid=$id{$collage_reference}&amp;order_in_collage={$_GET['order_in_collage']}\">[$admin_lang_imgedit_select_this_image]</a></strong><br/>";
+			if (isset($_GET['x'])) {
+				if ($_GET['x'] == "select_other_image") 
+					$actions_links = "<strong> <a href=\"$PHP_SELF?view=images&amp;x=select_image&amp;old_image_id={$_GET['old_image_id']}&amp;imageid=$id{$collage_reference}&amp;order_in_collage={$_GET['order_in_collage']}\">[$admin_lang_imgedit_select_this_image]</a></strong><br/>";
+				else if ($_GET['x'] == "select_new_image")
+					$actions_links = "<strong> <a href=\"$PHP_SELF?view=images&amp;x=set_new_image&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_select_this_image]</a></strong><br/>";
+			}
 				
 			echo "<li><a href=\"../index.php?showimage=$id\"><img src=\"".$cfgrow['thumbnailpath']."thumb_$image\" align=\"left\" hspace=\"3\" alt=\"Click to go to image\" /></a>";
 			
-			if (!isset($_GET['x']) || $_GET['x'] != "select_other_image") echo "<input type=\"checkbox\" class=\"images-checkbox\" name=\"moderate_image_boxes[]\" value=\"$id\" ".(in_array($id, $_POST['moderate_image_boxes'])?' checked':'')."/>";
+			if (!isset($_GET['x']) || ($_GET['x'] != "select_other_image" && $_GET['x'] != "select_new_image")) echo "<input type=\"checkbox\" class=\"images-checkbox\" name=\"moderate_image_boxes[]\" value=\"$id\" ".(in_array($id, $_POST['moderate_image_boxes'])?' checked':'')."/>";
 			
 			echo "$actions_links
 				<strong>#$id<br/>
@@ -707,7 +730,7 @@ if($_GET['view'] == "images")
 		}
 
 		echo "</ul>";
-		if (!isset($_GET['x']) || $_GET['x'] != "select_other_image") echo"</form>";
+		if (!isset($_GET['x']) || ($_GET['x'] != "select_other_image" && $_GET['x'] != "select_new_image")) echo"</form>";
 
 		if($pixelpost_photonumb > $_SESSION['numimg_pp'])
     	{
