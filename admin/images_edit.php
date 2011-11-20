@@ -352,7 +352,7 @@ if($_GET['view'] == "images")
 		if (isset($_GET['imageid']) && isset($_GET['collage_id'])) {
 			echo "<div class='jcaption'>$admin_lang_imgedit_deleted	</div>
 						<div class='content confirm'>";
-			$query = "delete from ".$pixelpost_db_prefix."collage_images where image_id='{$_GET['imageid']}' and collage_id='{$_GET['collage_id']}'";
+			$query = "delete from ".$pixelpost_db_prefix."collage_images where image_id='{$_GET['imageid']}' and collage_id='{$_GET['collage_id']}' and order_in_collage='{$_GET['order_in_collage']}'";
 			$result = mysql_query($query) ||("Error: ".mysql_error());
 		    echo "&nbsp;$admin_lang_imgedit_deleted_from_collage&nbsp;</div>";
 		}
@@ -679,7 +679,7 @@ if($_GET['view'] == "images")
     
 			$fs = filesize($cfgrow['imagepath'].$image);
 			$fs*=0.001;
-			$actions_links = "<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}&amp;order_in_collage={$order_in_collage}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>";
+			$actions_links = "<strong><a href=\"$PHP_SELF?view=images&amp;id=$id{$collage_reference}&amp;order_in_collage={$order_in_collage}\">[$admin_lang_imgedit_edit]</a> <a href=\"../index.php?showimage=$id\" target=\"_blank\">[$admin_lang_imgedit_preview]</a> <a onclick=\"return confirmDeleteImg()\" href=\"$PHP_SELF?view=images&amp;x=delete&amp;imageid=$id{$collage_reference}\">[$admin_lang_imgedit_delete]</a> <a onclick=\"return confirmDeleteImgFromCollage()\" href=\"$PHP_SELF?view=images&amp;x=delete_from_collage&amp;imageid=$id{$collage_reference}&amp;order_in_collage={$order_in_collage}\">[$admin_lang_imgedit_delete_from_collage]</a></strong><br/>";
 			if (isset($_GET['x'])) {
 				if ($_GET['x'] == "select_other_image") 
 					$actions_links = "<strong> <a href=\"$PHP_SELF?view=images&amp;x=select_image&amp;old_image_id={$_GET['old_image_id']}&amp;imageid=$id{$collage_reference}&amp;order_in_collage={$_GET['order_in_collage']}\">[$admin_lang_imgedit_select_this_image]</a></strong><br/>";
