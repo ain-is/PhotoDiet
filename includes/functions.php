@@ -127,8 +127,9 @@ function print_comments($imageid)
 
 	$comment_count = 0;
 	$image_comments = "<ul>"; // comments stored in this string
-	$cquery = mysql_query("select datetime, message, name, url, email  from ".$pixelpost_db_prefix."comments where parent_id='".$imageid."' and publish='yes' order by id asc");
-	while(list($comment_datetime, $comment_message, $comment_name, $comment_url, $comment_email) = mysql_fetch_row($cquery))
+	$cquery = mysql_query("select datetime, message, name, url, email, login  from ".$pixelpost_db_prefix."comments as comments".
+	" left outer join ".$pixelpost_db_prefix."users as users on users.id=comments.user_id where parent_id='".$imageid."' and publish='yes' order by comments.id asc");
+	while(list($comment_datetime, $comment_message, $comment_name, $comment_url, $comment_email, $login) = mysql_fetch_row($cquery))
 	{
 		$comment_message = pullout($comment_message);
 		$comment_name = pullout($comment_name);
@@ -153,7 +154,11 @@ function print_comments($imageid)
 			// admin comment
 			$image_comments .= "<li class=\"admin_comment\">$comment_message<br />$comment_name @ $comment_datetime</li>";
 		} else {
-			$image_comments .= "<li>$comment_message<br />$comment_name @ $comment_datetime</li>";
+			if ($login != null) {
+				$image_comments .= "<li>$comment_message<br /><a href='./index.php?x=mycollage&user=$login' target='_blank' style='color:blue'><b>$login</b></a> @ $comment_datetime</li>";
+			} else {
+				$image_comments .= "<li>$comment_message<br />$comment_name @ $comment_datetime</li>";
+			}
 		}
 		$comment_count++;
 
@@ -273,7 +278,7 @@ function unsharp_mask($img, $sharpeningsetting)    {
 ////  
 ////                  Unsharp Mask for PHP - version 2.1.1  
 ////  
-////    Unsharp mask algorithm by Torstein H¬Ønsi 2003-07.  
+////    Unsharp mask algorithm by Torstein 2003-07.  
 ////             thoensi_at_netcom_dot_no.  
 ////               Please leave this notice.  
 ////  

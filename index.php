@@ -901,6 +901,15 @@ if(!isset($_GET['x'])) {
 
 	$image_comments = print_comments($imageid);
 	$tpl = ereg_replace("<IMAGE_COMMENTS>",$image_comments,$tpl);
+	
+	// Hide user name, email, URL and save user data checkbox for registered users
+	if (isset($_SESSION['current_user'])) {
+		$tpl = ereg_replace("<REMOVE_USER_FIELDS_START>","<!--",$tpl);
+		$tpl = ereg_replace("<REMOVE_USER_FIELDS_END>","-->",$tpl);
+	} else {
+		$tpl = ereg_replace("<REMOVE_USER_FIELDS_START>","",$tpl);
+		$tpl = ereg_replace("<REMOVE_USER_FIELDS_END>","",$tpl);
+	}
 
 	if((isset($_GET['popup']) && $_GET['popup'] == "comment") AND (!isset($_GET['x']) OR $_GET['x'] != "save_comment")) {
 

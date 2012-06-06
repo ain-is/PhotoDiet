@@ -125,9 +125,12 @@ if(isset($_GET['x'])&&$_GET['x'] == "save_comment")
 
 
 // $name
-	$name = isset($_POST['name']) ? $_POST['name'] : "";
-	if (eregi("\r",$name) || eregi("\n",$name))	die("No intrusion! ?? :(");
-	$name = clean_comment($name);
+	if (isset($_SESSION["current_user"])) $name = $_SESSION["current_user"];
+	else {
+		$name = isset($_POST['name']) ? $_POST['name'] : "";
+		if (eregi("\r",$name) || eregi("\n",$name))	die("No intrusion! ?? :(");
+		$name = clean_comment($name);
+	}
 
 // $parent_name
 	$parent_name = isset($_POST['parent_name']) ? $_POST['parent_name'] : "";
@@ -180,8 +183,16 @@ if(isset($_GET['x'])&&$_GET['x'] == "save_comment")
 			// to the job now
 			if ($cmnt_moderate_permission =='yes')	$extra_message = "<b>$lang_message_moderating_comment</b><p />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-			$query = "INSERT INTO ".$pixelpost_db_prefix."comments(id,parent_id,datetime,ip,message,name,url,email,publish)
-		VALUES(NULL,'$parent_id','$datetime','$ip','$message','$name','$url','$email','$cmnt_publish_permission')";
+			if (!isset($_SESSION["current_user"])) {
+				$query = "INSERT INTO ".$pixelpost_db_prefix."comments(id,parent_id,datetime,ip,message,name,url,email,publish)
+						VALUES(NULL,'$parent_id','$datetime','$ip','$message','$name','$url','$email','$cmnt_publish_permission')";
+			} else {
+				$user_id_query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$_SESSION["current_user"]}'");
+				$row = mysql_fetch_array($user_id_query);
+				$user_id = $row['id'];
+				$query = "INSERT INTO ".$pixelpost_db_prefix."comments(id,parent_id,datetime,ip,message,name,url,email,publish,user_id)
+						VALUES(NULL,'$parent_id','$datetime','$ip','$message','$name','$url','$email','$cmnt_publish_permission','$user_id')";
+			}
 
 			mysql_query($query) or die("MySQL error " . mysql_errno() . ": " . mysql_error());
 
