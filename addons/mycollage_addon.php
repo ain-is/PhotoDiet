@@ -195,14 +195,19 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	// Make Login/Logout link
 	$login_url = "/Pixelpost/admin/index.php";
 	$logout_url = "/Pixelpost/admin/index.php?x=logout";
-	$new_collage_url = $login_url."?x=collage"; 
+	$new_collage_url = $login_url."?x=collage";
+	if (isset($_GET['user'])) {
+		$login_url = $login_url."?user={$_GET['user']}";
+		$logout_url = $logout_url."&user={$_GET['user']}";
+	} 
 	if (isset($_GET['collage_id'])) {
-		$login_url = $login_url."?collage_id={$_GET['collage_id']}";
+		if (isset($_GET['user'])) $login_url = $login_url."&collage_id={$_GET['collage_id']}";
+		else $login_url = $login_url."?collage_id={$_GET['collage_id']}";
 		$logout_url = $logout_url."&collage_id={$_GET['collage_id']}";
 	}
 	
-	if ($edit_mode)	{
-		$login_logout_link = "<a href=\"{$logout_url}\" title=\"{$lang_logout}\">$lang_logout</a>";
+	if (isset($_SESSION["current_user"]))	{
+		$login_logout_link = "<a href=\"{$logout_url}\" title=\"{$lang_logout} - {$_SESSION['current_user']}\">$lang_logout</a>";
 		$new_collage_link = "<a href=\"{$new_collage_url}\" title=\"{$add_new_collage}\">$new_collage</a> |";
 	}
 	else {

@@ -198,10 +198,13 @@ if($_GET['x'] == "login")
 			    setcookie( "pp_user", clean($_POST['user']), time()+604800);
 			    setcookie( "pp_password", sha1($cfgrow_password.$_SERVER["REMOTE_ADDR"]), time()+604800);
 		    }
-		    $user_home_page = $user_home_page.$_SESSION["current_user"];
-		    if (isset($_POST['collage_id']) && $_POST['collage_id'] != null && $_POST['collage_id'] != ''){
-		    	$user_home_page = $user_home_page."&collage_id=".$_POST['collage_id'];
-		    }
+		    
+		    if (isset($_POST['viewing_user'])) {
+		    	$user_home_page = $user_home_page.$_POST['viewing_user'];
+		    	if (isset($_POST['collage_id']) && $_POST['collage_id'] != null && $_POST['collage_id'] != ''){
+		    		$user_home_page = $user_home_page."&collage_id=".$_POST['collage_id'];
+		    	}
+		    } else    $user_home_page = $user_home_page.$_SESSION["current_user"];
 		    header("Location:".$user_home_page);
 		} else { // User login was failed
 			$loginmessage = "$admin_start_userpw <br />
@@ -215,7 +218,9 @@ if($_GET['x'] == "login")
 if($_GET['x'] == "logout")
 {
 	$user = null;
-	if (isset($_SESSION["current_user"])) $user = $_SESSION["current_user"];
+	if (isset($_GET['user'])) $user = $_GET['user'];
+	elseif (isset($_SESSION["current_user"])) $user = $_SESSION["current_user"];
+	
 	unset($_SESSION["pixelpost_admin"]);
 	unset($_SESSION["current_user"]);
 	setcookie( "pp_user", "", time()-36000);
@@ -347,6 +352,7 @@ if($login == "true")
     <input type="submit" value="Login" /><br /><br />
     <?php echo $loginmessage; ?>
     <input type="hidden" name="collage_id" value="<?php echo $_GET['collage_id'];?>">
+    <input type="hidden" name="viewing_user" value="<?php echo $_GET['user'];?>">
     </form>
     <div id='askforpass'><script type='text/javascript'>flip('askforpass');</script>
     <hr />
