@@ -10,6 +10,7 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	$thumb_output = "";
 	$where = "";
 	$user_id = 0; // User name from 'users' table
+	$user_name = null;
 	$collage_id = 0; 
 	$collage_cols_num = 0;
 	$collage_datetime = $cdate;
@@ -24,22 +25,31 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	
 	// Get user and collage ID from URL
 	if (isset($_GET['user'])) {
-		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$_GET['user']}'");
+		$user_name = $_GET['user'];
+		$query = mysql_query("select id from {$pixelpost_db_prefix}users where login = '{$user_name}'");
 		$row = mysql_fetch_array($query);
 		$user_id = $row[0];
-		$collage_showprefix = "./index.php?x=mycollage&user=".$_GET['user']."&collage_id=";		
-        $tpl = ereg_replace("<USER_NAME>",$_GET['user'],$tpl);
+		$collage_showprefix = "./index.php?x=mycollage&user=".$user_name."&collage_id=";		
+        $tpl = ereg_replace("<USER_NAME>",$user_name,$tpl);
 	} else {
 		$collage_showprefix = "./index.php?x=mycollage&collage_id=";
         $tpl = ereg_replace("<USER_NAME>","",$tpl);
+        // Get user data and collage ID for latest collage in the DB
+		$query = mysql_query("select collages.id, users.id, users.login from pixelpost_pixelpost as collages, pixelpost_users as users where is_collage=1 and users.id = collages.user_id and users.enabled=1 order by datetime desc limit 1");
+		$row = mysql_fetch_array($query);
+		if (!isset($_GET['collage_id'])) $collage_id = $row[0];
+		$user_id = $row[1];
+		$user_name = $row[2];
 	}
 	
 	// If collage_id is not set then use recent collage for current user
 	if (!isset($_GET['collage_id'])) {
-		$query = mysql_query("select id from {$pixelpost_db_prefix}pixelpost where user_id = {$user_id} AND is_collage = 1 order by datetime desc limit 1");
-		$row = mysql_fetch_array($query);
-		$collage_id = $row[0];
-	} else {	
+		if ($collage_id == 0) {
+			$query = mysql_query("select id from {$pixelpost_db_prefix}pixelpost where user_id = {$user_id} AND is_collage = 1 order by datetime desc limit 1");
+			$row = mysql_fetch_array($query);
+			$collage_id = $row[0];
+		}
+	} else {
 		$collage_id = $_GET['collage_id'];
 	}
 	
@@ -222,10 +232,10 @@ if(isset($_GET['x']) && $_GET['x'] == "mycollage")
 	
 	if ($row['comments'] == 'F'){
 	
-		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$_GET['user']."&collage_id=$collage_id' onclick=\"alert('$lang_comment_popup_disabled');\">$lang_comment_popup</a>",$tpl);
+		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$user_name."&collage_id=$collage_id' onclick=\"alert('$lang_comment_popup_disabled');\">$lang_comment_popup</a>",$tpl);
 	}else{
 	
-		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$_GET['user']."&collage_id=$collage_id' onclick=\"window.open('index.php?popup=comment&amp;showimage=$collage_id','Comments','width=480,height=540,scrollbars=yes,resizable=yes');\">$lang_comment_popup</a>",$tpl);
+		$tpl = ereg_replace("<COMMENT_POPUP>","<a href='./index.php?x=mycollage&user=".$user_name."&collage_id=$collage_id' onclick=\"window.open('index.php?popup=comment&amp;showimage=$collage_id','Comments','width=480,height=540,scrollbars=yes,resizable=yes');\">$lang_comment_popup</a>",$tpl);
 	}
 	
 	$tpl = ereg_replace("<COLLAGE_TITLE>",$collage_title,$tpl);

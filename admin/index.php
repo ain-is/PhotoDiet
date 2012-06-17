@@ -191,7 +191,6 @@ if($_GET['x'] == "login")
 			unset($login);
 			$_SESSION["current_user"] = $_POST['user'];
 			$_SESSION["pixelpost_admin"] = $cfgrow_password;
-				
 		    // set autologin cookie
 		    if($_POST['remember'] == 'on')
 		    {
@@ -199,12 +198,14 @@ if($_GET['x'] == "login")
 			    setcookie( "pp_password", sha1($cfgrow_password.$_SERVER["REMOTE_ADDR"]), time()+604800);
 		    }
 		    
-		    if (isset($_POST['viewing_user'])) {
+		    if (isset($_POST['viewing_user']) && $_POST['viewing_user'] != null) {
 		    	$user_home_page = $user_home_page.$_POST['viewing_user'];
 		    	if (isset($_POST['collage_id']) && $_POST['collage_id'] != null && $_POST['collage_id'] != ''){
 		    		$user_home_page = $user_home_page."&collage_id=".$_POST['collage_id'];
 		    	}
-		    } else    $user_home_page = $user_home_page.$_SESSION["current_user"];
+		    } else {
+		    	$user_home_page = $user_home_page.$_SESSION["current_user"];
+		    }
 		    header("Location:".$user_home_page);
 		} else { // User login was failed
 			$loginmessage = "$admin_start_userpw <br />
